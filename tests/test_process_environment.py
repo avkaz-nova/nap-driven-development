@@ -26,8 +26,10 @@ class ProcessEnvironmentTests(unittest.TestCase):
     def test_inherited_environment_is_not_modified(self) -> None:
         environment = {'PSModulePath': 'PowerShell 7 modules', 'CUSTOM': 'keep'}
         with patch.dict(os.environ, environment, clear=True):
+            # Windows normalizes os.environ keys to uppercase when setting them.
+            before = dict(os.environ)
             self.assertEqual(child_environment('powershell'), {'CUSTOM': 'keep'})
-            self.assertEqual(dict(os.environ), environment)
+            self.assertEqual(dict(os.environ), before)
 
     def test_explicit_empty_environment_does_not_inherit_parent_values(self) -> None:
         with patch.dict(os.environ, {'CUSTOM': 'parent'}):
