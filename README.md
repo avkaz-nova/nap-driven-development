@@ -21,10 +21,8 @@ Install once on each computer. You need **Git** and **Claude Code or Codex**.
 Expand your operating system's instructions below. Complete steps 1 and 2, then choose one option
 in step 3. Run each command separately; optional previews make no changes.
 
-### 🍎 Mac
-
 <details>
-<summary><strong>Show Mac installation instructions</strong></summary>
+<summary><strong>Install for Mac</strong></summary>
 
 Open **Terminal**.
 
@@ -99,10 +97,8 @@ bash ./install.sh --claude
 
 ---
 
-### 🪟 Windows
-
 <details>
-<summary><strong>Show Windows installation instructions</strong></summary>
+<summary><strong>Install for Windows</strong></summary>
 
 Open **PowerShell**.
 
@@ -248,8 +244,6 @@ If you used a ZIP, download and extract a fresh copy instead of running `git pul
 Then choose your operating system and the agents you want to update.
 Run the selected command from the updated NDD folder.
 
-### 🍎 Mac
-
 <details>
 <summary><strong>Update for Mac</strong></summary>
 
@@ -283,8 +277,6 @@ bash ./install.sh --claude
 </details>
 
 ---
-
-### 🪟 Windows
 
 <details>
 <summary><strong>Update for Windows</strong></summary>
