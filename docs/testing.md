@@ -59,8 +59,11 @@ Use the [help/review scenarios](help-review-validation.md) on macOS and Windows
 in both Claude Code and Codex. Record observations separately from automated
 checks. Distribution tests verify metadata/resources; installer tests also cover
 a synthetic four-skill 0.3.0 layout with genuine installer-generated receipts,
-upgrade/reinstall to six skills, new resource failures and foreign-name conflicts.
-They do not prove that either agent follows the new review instructions.
+upgrade/reinstall to six skills, missing resources, automatic replacement of
+existing NDD skill names and local edits, and removal of retained backups.
+Terminal help tests compare output with the shared reference, cover version/resource
+failures and verify the installed command through PATH after source removal.
+They do not prove that either agent follows the help or review instructions.
 
 ## Compact workflow checks
 

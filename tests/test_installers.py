@@ -377,17 +377,10 @@ function Remove-Item {
         self.run_installer('--uninstall', '--codex-dir', str(self.other), '--keep-source')
         self.assertEqual(list(self.other.iterdir()), [])
 
-    def test_new_skill_conflicts_and_resources_fail_before_writes(self) -> None:
-        for name in ('ndd-help', 'ndd-review'):
-            with self.subTest(conflict=name):
-                foreign = self.other / name
-                foreign.mkdir(parents=True)
-                (foreign / 'user.txt').write_text('keep me')
-                before = snapshot(self.root)
-                self.run_installer('--codex-dir', str(self.other), success=False)
-                self.assertEqual(snapshot(self.root), before)
-                shutil.rmtree(foreign)
-        for resource in ('ndd-help/SKILL.md', 'ndd-review/agents/openai.yaml',
+    def test_missing_resources_fail_before_writes(self) -> None:
+        for resource in ('ndd-help/SKILL.md', 'ndd-help/assets/help.md',
+                         'ndd-help/scripts/ndd-help', 'ndd-help/scripts/ndd-help.cmd',
+                         'ndd-help/scripts/print-help.ps1', 'ndd-review/agents/openai.yaml',
                          'ndd-review/assets/review.md', 'ndd-review/references/report-updates.md'):
             with self.subTest(missing=resource):
                 path = self.distribution / 'skills' / resource
@@ -420,35 +413,49 @@ function Remove-Item {
         self.run_installer(success=False)
         self.assertEqual(snapshot(self.root), before)
 
-    def test_foreign_name_refused_before_any_target_changes(self) -> None:
-        foreign = self.other / 'ndd-do'
-        foreign.mkdir(parents=True)
-        (foreign / 'user.txt').write_text('user work', encoding='utf-8')
+    def test_existing_names_are_replaced_on_both_targets(self) -> None:
+        for target in (self.target, self.other):
+            for name in NAMES:
+                existing = target / name
+                existing.mkdir(parents=True)
+                (existing / 'user.txt').write_text('old contents', encoding='utf-8')
+            custom = target / 'ndd-custom'
+            custom.mkdir()
+            (custom / 'keep.txt').write_text('unrelated skill')
         before = snapshot(self.root)
-        self.run_installer('--codex-dir', str(self.other), success=False)
+        self.run_installer('--codex-dir', str(self.other), '--dry-run')
         self.assertEqual(snapshot(self.root), before)
+        self.run_installer('--codex-dir', str(self.other))
+        for target in (self.target, self.other):
+            for name in NAMES:
+                self.assertEqual(snapshot(target / name), snapshot(self.distribution / 'skills' / name))
+            self.assertEqual((target / 'ndd-custom/keep.txt').read_text(), 'unrelated skill')
+            state = Path(str(target) + '.ndd-kit')
+            self.assertEqual({p.name for p in state.iterdir()}, {f'{name}.receipt' for name in NAMES})
 
-    def test_explicit_replace_backs_up_foreign_directory(self) -> None:
-        foreign = self.target / 'ndd-spec'
-        foreign.mkdir(parents=True)
-        (foreign / 'user.txt').write_text('user work', encoding='utf-8')
-        self.run_installer('--replace', '--dry-run')
-        self.assertTrue((foreign / 'user.txt').exists())
+    def test_replace_flag_remains_compatible_without_retaining_backups(self) -> None:
+        existing = self.target / 'ndd-spec'
+        existing.mkdir(parents=True)
+        (existing / 'user.txt').write_text('old contents', encoding='utf-8')
         self.run_installer('--replace')
-        backups = list((self.state / 'backups').glob('ndd-spec.*/skill/user.txt'))
-        self.assertEqual(len(backups), 1)
-        self.assertEqual(backups[0].read_text(encoding='utf-8'), 'user work')
+        self.assertEqual(snapshot(existing), snapshot(self.distribution / 'skills/ndd-spec'))
+        self.assertFalse((self.state / 'backups').exists())
 
-    def test_local_edits_block_update(self) -> None:
+    def test_update_overwrites_local_edits_and_removes_legacy_backups(self) -> None:
         self.run_installer()
         file = self.target / 'ndd-spec/SKILL.md'
         file.write_bytes(file.read_bytes() + b'\nLocal instructions.\n')
+        (self.target / 'ndd-spec/obsolete.txt').write_text('obsolete')
+        backups = self.state / 'backups/ndd-spec.previous/skill'
+        backups.mkdir(parents=True)
+        (backups / 'user.txt').write_text('legacy backup')
         before = snapshot(self.root)
-        self.run_installer(success=False)
+        self.run_installer('--dry-run')
         self.assertEqual(snapshot(self.root), before)
-        self.run_installer('--replace')
-        self.assertTrue(any(b'Local instructions.' in p.read_bytes()
-                            for p in (self.state / 'backups').glob('ndd-spec.*/skill/SKILL.md')))
+        self.run_installer()
+        for name in NAMES:
+            self.assertEqual(snapshot(self.target / name), snapshot(self.distribution / 'skills' / name))
+        self.assertEqual({p.name for p in self.state.iterdir()}, {f'{name}.receipt' for name in NAMES})
 
     def test_uninstall_preserves_other_skills_and_source(self) -> None:
         self.run_installer()
@@ -467,7 +474,8 @@ function Remove-Item {
     def test_link_uninstall_never_deletes_source(self) -> None:
         source_before = snapshot(self.distribution)
         self.run_installer('--link')
-        self.run_installer('--link')  # Old backups now contain links/junctions too.
+        self.run_installer('--link')  # Cleanup must remove old links, never their targets.
+        self.assertFalse((self.state / 'backups').exists())
         for name in NAMES:
             self.assertEqual((self.target / name).resolve(), (self.distribution / 'skills' / name).resolve())
         self.run_installer('--uninstall')
@@ -514,6 +522,11 @@ function Remove-Item {
     @unittest.skipIf(POWERSHELL, 'POSIX cp injection; PowerShell has a separate rollback test')
     def test_failure_rolls_back_completed_replacements(self) -> None:
         self.run_installer()
+        (self.target / 'ndd-setup/local.txt').write_text('preserve on failure')
+        legacy = self.state / 'backups/previous'
+        legacy.mkdir(parents=True)
+        (legacy / 'keep.txt').write_text('older backup')
+        before_backups = snapshot(self.state / 'backups')
         before_skills = snapshot(self.target)
         before_receipts = {p.name: p.read_bytes() for p in self.state.glob('*.receipt')}
         (self.distribution / 'skills/ndd-setup/VERSION').write_text('0.3.1\n')
@@ -527,12 +540,37 @@ function Remove-Item {
         self.assertIn('injected copy failure', result.stdout)
         self.assertEqual(snapshot(self.target), before_skills)
         self.assertEqual({p.name: p.read_bytes() for p in self.state.glob('*.receipt')}, before_receipts)
+        self.assertEqual(snapshot(self.state / 'backups'), before_backups)
         self.assertFalse((self.state / 'lock').exists())
         self.assertEqual(list(self.state.glob('stage.*')), [])
+
+    @unittest.skipIf(POWERSHELL, 'POSIX cleanup failure injection')
+    def test_backup_cleanup_failure_is_reported_and_retry_removes_backups(self) -> None:
+        self.run_installer()
+        (self.distribution / 'skills/ndd-setup/VERSION').write_text('0.3.1\n')
+        bin_dir = self.root / 'fake-bin'
+        bin_dir.mkdir()
+        wrapper = bin_dir / 'rm'
+        wrapper.write_text('#!/bin/bash\ncase "${@: -1}" in */backups) echo "injected cleanup failure" >&2; exit 9;; esac\nexec /bin/rm "$@"\n')
+        wrapper.chmod(0o755)
+        environment = dict(os.environ, PATH=str(bin_dir) + os.pathsep + os.environ['PATH'])
+        result = self.run_installer(success=False, environment=environment)
+        self.assertIn('injected cleanup failure', result.stdout)
+        self.assertIn('Cleanup/restore incomplete', result.stdout)
+        self.assertEqual((self.target / 'ndd-setup/VERSION').read_text(), '0.3.1\n')
+        self.assertTrue((self.state / 'backups').is_dir())
+        self.assertFalse((self.state / 'lock').exists())
+        self.run_installer()
+        self.assertFalse((self.state / 'backups').exists())
 
     @unittest.skipUnless(POWERSHELL, 'PowerShell Copy-Item failure injection')
     def test_powershell_failure_rolls_back_completed_replacements(self) -> None:
         self.run_installer()
+        (self.target / 'ndd-setup/local.txt').write_text('preserve on failure')
+        legacy = self.state / 'backups/previous'
+        legacy.mkdir(parents=True)
+        (legacy / 'keep.txt').write_text('older backup')
+        before_backups = snapshot(self.state / 'backups')
         before = snapshot(self.target)
         before_receipts = {p.name: p.read_bytes() for p in self.state.glob('*.receipt')}
         (self.distribution / 'skills/ndd-setup/VERSION').write_text('0.3.1\n')
@@ -554,6 +592,7 @@ function Copy-Item {
         self.assertIn('injected copy failure', result.stderr)
         self.assertEqual(snapshot(self.target), before)
         self.assertEqual({p.name: p.read_bytes() for p in self.state.glob('*.receipt')}, before_receipts)
+        self.assertEqual(snapshot(self.state / 'backups'), before_backups)
         self.assertFalse((self.state / 'lock').exists())
 
     def test_install_inside_distribution_is_rejected(self) -> None:
@@ -572,7 +611,8 @@ function Copy-Item {
         self.run_installer()
         backup = self.state / 'backups'
         saved = self.root / 'saved-backups'
-        backup.rename(saved)
+        saved.mkdir()
+        (saved / 'keep.txt').write_text('external data')
         backup.symlink_to(saved, target_is_directory=True)
         before = snapshot(self.root)
         self.run_installer(success=False)
@@ -593,7 +633,10 @@ function Copy-Item {
 
     def test_uninstall_purges_modified_skills_and_all_state(self) -> None:
         self.run_installer('--codex-dir', str(self.other))
-        self.run_installer('--codex-dir', str(self.other))  # Accumulate update backups.
+        for target in (self.target, self.other):
+            backups = Path(str(target) + '.ndd-kit') / 'backups'
+            backups.mkdir()
+            (backups / 'old.txt').write_text('legacy backup')
         (self.target / 'ndd-spec/SKILL.md').write_text('local NDD edits', encoding='utf-8')
         project = self.root / 'work-project'
         project.mkdir()
@@ -608,7 +651,9 @@ function Copy-Item {
 
     def test_uninstall_purges_leftover_state_without_installed_skills(self) -> None:
         self.run_installer()
-        self.run_installer()  # State like an old 0.2 uninstall that retained backups.
+        backups = self.state / 'backups'
+        backups.mkdir()
+        (backups / 'old.txt').write_text('legacy backup')
         for name in NAMES:
             shutil.rmtree(self.target / name)
             (self.state / f'{name}.receipt').unlink()
@@ -622,7 +667,9 @@ function Copy-Item {
 
     def test_uninstall_dry_run_preserves_edits_and_backups(self) -> None:
         self.run_installer()
-        self.run_installer()
+        backups = self.state / 'backups'
+        backups.mkdir()
+        (backups / 'old.txt').write_text('legacy backup')
         (self.target / 'ndd-spec/user-note.txt').write_text('local edits')
         before = snapshot(self.root)
         self.run_installer('--uninstall', '--dry-run')
@@ -654,6 +701,7 @@ function Copy-Item {
         external = self.root / 'external-project'
         external.mkdir()
         (external / 'keep.txt').write_text('preserve')
+        (self.state / 'backups').mkdir()
         (self.state / 'backups' / 'external-link').symlink_to(external, target_is_directory=True)
         (self.state / 'backups' / 'broken-link').symlink_to(self.root / 'missing')
         (self.target / 'ndd-do' / 'external-link').symlink_to(external, target_is_directory=True)
@@ -661,6 +709,23 @@ function Copy-Item {
         self.run_installer('--uninstall')
         self.assertEqual(snapshot(external), before)
         self.assertFalse(self.state.exists())
+
+    @unittest.skipIf(WINDOWS, 'POSIX symlink check')
+    def test_update_does_not_follow_links_in_replaced_skills_or_legacy_backups(self) -> None:
+        self.run_installer()
+        external = self.root / 'external-project'
+        external.mkdir()
+        (external / 'keep.txt').write_text('preserve')
+        backups = self.state / 'backups'
+        backups.mkdir()
+        (backups / 'external-link').symlink_to(external, target_is_directory=True)
+        (backups / 'broken-link').symlink_to(self.root / 'missing')
+        (self.target / 'ndd-do/external-link').symlink_to(external, target_is_directory=True)
+        before = snapshot(external)
+        self.run_installer()
+        self.assertEqual(snapshot(external), before)
+        self.assertFalse(backups.exists())
+        self.assertEqual(snapshot(self.target / 'ndd-do'), snapshot(self.distribution / 'skills/ndd-do'))
 
     @unittest.skipIf(POWERSHELL, 'POSIX delete failure injection')
     def test_uninstall_failure_is_reported_and_retry_finishes_cleanup(self) -> None:
@@ -680,6 +745,26 @@ function Copy-Item {
         self.assertEqual(snapshot(self.state / 'backups'), backups)
         self.run_installer('--uninstall')
         self.assertFalse(self.state.exists())
+
+    def test_terminal_help_install_update_and_uninstall(self) -> None:
+        # Mimic a ZIP extractor that loses Unix executable permissions.
+        if not WINDOWS:
+            (self.distribution / 'skills/ndd-help/scripts/ndd-help').chmod(0o644)
+        self.run_installer()
+        self.run_installer()  # Replacement also refreshes the CLI and shared text.
+        version = (self.distribution / 'skills/ndd-setup/VERSION').read_text().strip()
+        expected = (self.distribution / 'skills/ndd-help/assets/help.md').read_text(encoding='utf-8')
+        expected = expected.replace('{{VERSION}}', version)
+        shutil.rmtree(self.distribution / 'skills')
+        cli_dir = self.target / 'ndd-help/scripts'
+        environment = dict(os.environ, PATH=str(cli_dir) + os.pathsep + os.environ['PATH'])
+        command = ['cmd.exe', '/d', '/c', 'ndd-help'] if WINDOWS else ['ndd-help']
+        result = subprocess.run(command, cwd=self.root, env=environment, capture_output=True,
+                                text=True, encoding='utf-8', timeout=15)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, expected)
+        self.run_installer('--uninstall')
+        self.assertFalse(cli_dir.exists())
 
     def test_bundled_templates_work_without_source_or_project_setup(self) -> None:
         expected = {name: (self.distribution / 'skills/ndd-setup/assets' / name).read_bytes()

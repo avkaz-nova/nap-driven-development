@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.5.0 — 2026-11-06 (public preview)
+
+- Automatically replace all six installed NDD skills, including local edits,
+  without requiring `--replace` / `-Replace`. Successful updates remove previous
+  backups; temporary recovery copies remain available if rollback fails.
+- Report backup cleanup failures with a nonzero exit status so incomplete updates
+  cannot appear successful to scripts.
+- Return a predefined English help reference in chat, with only the installed
+  version substituted.
+- Add a terminal `ndd-help` command for Bash and Windows using the same reference,
+  without an agent, network access or project setup. Install/update/uninstall
+  manage it with the help skill; installers print the directory to add to PATH.
+- Verify exact help output, incomplete-installation errors, installed CLI behavior
+  after source removal, packaging, replacement and backup cleanup.
+
 ## 0.4.0 — 2026-11-06 (public preview)
 
 - Make new specs/plans compact by default: AC-only requirements, task-level

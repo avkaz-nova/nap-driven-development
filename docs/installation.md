@@ -12,7 +12,7 @@ registration uses Git 2.31 or newer.
 | `--claude` | `-Claude` | Install for Claude Code |
 | `--all` | `-All` | Select both agents |
 | `--dry-run` | `-DryRun` | Preview without changes |
-| `--replace` | `-Replace` | Back up and replace conflicting or modified skills |
+| `--replace` | `-Replace` | Accepted for compatibility; replacement is automatic |
 | `--uninstall` | `-Uninstall` | Remove NDD for the selected agents |
 | `--keep-source` | `-KeepSource` | Keep the source clone during uninstall |
 | `--link` | `-Link` | Link skills to this checkout for development |
@@ -31,6 +31,50 @@ Link mode loads skills directly from the checkout, so pulling changes updates
 what the agent uses immediately. Keep that checkout in place. Normal installation
 copies the skills and works without the downloaded folder.
 
+## Terminal help command
+
+The `ndd-help` skill includes a terminal command in its `scripts` directory:
+`ndd-help` for Bash and `ndd-help.cmd` for Windows. It prints the same predefined
+English Markdown reference used by the chat skill and reads VERSION from the
+adjacent `ndd-setup` installation. No Python, agent or network is needed.
+Missing or invalid version data produces an incomplete-installation notice with
+the reference; missing/unreadable help text produces an error and nonzero exit.
+Arguments are ignored, just as with the chat help skill.
+
+Installers copy these files with the skill and print the directory to add to PATH.
+They do not edit shell profiles or persistent environment variables. Choose one
+installed agent's help directory; if you remove that agent later, switch to the
+remaining agent's directory.
+
+For the default Codex installation on Mac, enable the command in the current shell:
+
+```bash
+export PATH="$HOME/.agents/skills/ndd-help/scripts:$PATH"
+ndd-help
+```
+
+To keep it available in future zsh sessions, add that export line once to
+`~/.zshrc` (or use your shell's normal startup file). For Claude Code, substitute
+`$HOME/.claude/skills/ndd-help/scripts`, respecting `CLAUDE_CONFIG_DIR` if set.
+
+On Windows, enable the default Codex command in the current PowerShell session:
+
+```powershell
+$env:Path = "$HOME\.agents\skills\ndd-help\scripts;" + $env:Path
+ndd-help
+```
+
+For future sessions, add the full directory printed by the installer to your user
+Path via **Environment Variables**, then open a new terminal. The `.cmd` launcher
+uses Windows PowerShell with a process-only execution-policy bypass for the
+bundled read-only helper; it does not change persistent execution policy.
+PowerShell 7 can also run `scripts/print-help.ps1` directly.
+
+Custom installations work the same way; always use the installed path printed by
+the installer. Copy installations keep working after the downloaded source folder
+is removed. Link installations require the source folder to remain available.
+Uninstall removes the command with its skill, without editing your PATH.
+
 ## Windows execution policy
 
 If Windows blocks a script you have inspected, use this process-only override
@@ -43,17 +87,19 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1 -All
 This does not change persistent policy. On a managed computer, follow your
 organization's installation policy.
 
-## Modified skills and backups
+## Replacing existing skills
 
-An install or update stops if an existing skill is modified or cannot be identified
-as owned by NDD. To replace it deliberately, add `--replace` / `-Replace` to your
-install command; add the dry-run option first to preview.
+Install and update automatically replace all six NDD skill directories at the
+selected destinations, including local edits and existing directories without
+receipts. Unrelated skills and project files are preserved. Use `--dry-run` /
+`-DryRun` to preview. The old `--replace` / `-Replace` option is no longer needed.
 
-Receipts and backups live beside the skills directory in
-`<skills-directory>.ndd-kit`. Backups are under `backups/`, with the saved `skill`
-and, when present, its `receipt`. Updates keep these backups. Uninstall deletes
-them along with the owned skills, including local edits, without making a new backup.
-An existing skill without valid ownership information blocks uninstall.
+Receipts live beside the skills directory in `<skills-directory>.ndd-kit`.
+Successful installs retain no backups and delete backups left by earlier versions.
+Previous skills and receipts are held temporarily under `backups/` only to restore
+them if installation fails. Failed recovery retains these files for manual repair.
+Uninstall deletes all installation state; an existing skill without valid ownership
+information still blocks uninstall.
 
 ## Interrupted installation or removal
 

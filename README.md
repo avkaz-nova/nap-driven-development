@@ -28,7 +28,7 @@ tasks and checks. You approve both before the agent changes code, then review th
 verification results. See the [example spec](examples/002-csv-export/spec.md) and
 [plan](examples/002-csv-export/plan.md)—illustrative documents, not a completed demo.
 
-[Download v0.4.0 (public preview)](https://github.com/avkaz/nap-driven-development/releases/tag/v0.4.0)
+[Download v0.5.0 (public preview)](https://github.com/avkaz/nap-driven-development/releases/tag/v0.5.0)
 or install with Git below.
 
 ## Install
@@ -198,7 +198,7 @@ both agents; it does not install the agents themselves.
 <details>
 <summary>No Git? Download a ZIP instead</summary>
 
-1. Open the [v0.4.0 release](https://github.com/avkaz/nap-driven-development/releases/tag/v0.4.0) and download **ndd-kit-0.4.0.zip** from **Assets**.
+1. Open the [v0.5.0 release](https://github.com/avkaz/nap-driven-development/releases/tag/v0.5.0) and download **ndd-kit-0.5.0.zip** from **Assets**.
 2. Extract the ZIP and open Terminal or PowerShell in the extracted folder.
 3. Run **step 3** from the Mac or Windows instructions above.
 
@@ -277,7 +277,10 @@ git pull --ff-only
 If you used a ZIP, download and extract a fresh copy instead of running `git pull`.
 
 Then choose your operating system and the agents you want to update.
-Run the selected command from the updated NDD folder.
+Run the selected command from the updated NDD folder. Updates replace all six
+NDD skill directories, including local edits, without needing `--replace` /
+`-Replace`. Successful updates keep no backups and remove backups from earlier
+versions. Unrelated skills and project files are preserved.
 
 <details>
 <summary><strong>Update for Mac</strong></summary>
@@ -350,6 +353,34 @@ powershell -NoProfile -File .\install.ps1 -Claude
 If you installed to custom folders, use the same destination options again.
 
 Restart the agent after updating. Existing project specs and plans stay unchanged.
+
+## Help in chat or terminal
+
+In chat, use `$ndd-help` in Codex or `/ndd-help` in Claude Code. The skill returns
+fixed English help with the installed version. It still uses the agent; skill
+instructions cannot disable model reasoning. The terminal command prints the same
+reference directly, without AI, network access or project setup.
+
+After installation, run it immediately by path. For a default Codex installation:
+
+```bash
+# Mac / Linux
+bash "$HOME/.agents/skills/ndd-help/scripts/ndd-help"
+```
+
+```powershell
+# Windows
+& "$HOME\.agents\skills\ndd-help\scripts\ndd-help.cmd"
+```
+
+For the short `ndd-help` command, add that `scripts` directory to your `PATH`.
+For Claude Code use its installed skills directory instead (normally
+`~/.claude/skills`). Each installer prints the exact path, including custom
+locations. See [terminal command setup](docs/installation.md#terminal-help-command)
+for persistent PATH configuration.
+
+Updates replace the command and its shared help text with the skill. Uninstall
+removes them too; a PATH entry you added manually can then be removed manually.
 
 ## Uninstall
 

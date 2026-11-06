@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Print the shared reference without invoking an agent. Bash 3.2+.
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+HELP_FILE="$SCRIPT_DIR/../assets/help.md"
+VERSION_FILE="$SCRIPT_DIR/../../ndd-setup/VERSION"
+if [[ ! -f "$HELP_FILE" || ! -r "$HELP_FILE" ]]; then
+  echo "Error: help text missing or unreadable: $HELP_FILE" >&2
+  exit 1
+fi
+version=''
+if [[ -f "$VERSION_FILE" && -r "$VERSION_FILE" ]]; then
+  version=$(cat "$VERSION_FILE") || version=''
+  # Trim surrounding whitespace without accepting whitespace inside a version.
+  version="${version#"${version%%[![:space:]]*}"}"
+  version="${version%"${version##*[![:space:]]}"}"
+fi
+if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  version='version unavailable — incomplete installation'
+fi
+sed "s/{{VERSION}}/$version/g" "$HELP_FILE"

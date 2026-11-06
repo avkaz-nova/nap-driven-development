@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 FILES = ('README.md', 'LICENSE', 'CHANGELOG.md', 'install.sh', 'install.ps1', '.gitattributes')
 DIRECTORIES = ('skills', 'docs', 'examples', 'tests', 'scripts')
 TEXT_SUFFIXES = {'.md', '.sh', '.ps1', '.py', '.yaml', '.yml', '.txt'}
-TEXT_NAMES = {'LICENSE', 'VERSION', '.gitattributes'}
+TEXT_NAMES = {'LICENSE', 'VERSION', '.gitattributes', 'ndd-help'}
 
 
 def build_release(output: Path, *, root: Path = ROOT) -> Path:
@@ -37,7 +37,7 @@ def build_release(output: Path, *, root: Path = ROOT) -> Path:
             relative = path.relative_to(root).as_posix()
             info = zipfile.ZipInfo(f'ndd-kit-{version}/{relative}', date_time=(2020, 1, 1, 0, 0, 0))
             info.create_system = 3
-            mode = 0o755 if path.suffix == '.sh' else 0o644
+            mode = 0o755 if (path.suffix == '.sh' or path.name == 'ndd-help') else 0o644
             info.external_attr = (0o100000 | mode) << 16
             info.compress_type = zipfile.ZIP_DEFLATED
             content = path.read_bytes()

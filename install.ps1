@@ -2,8 +2,10 @@
 .SYNOPSIS
 Install NDD for Claude Code and/or Codex. PowerShell 5.1+ / 7+ on Windows.
 .DESCRIPTION
-Receipts and backups are stored beside each skills directory in <directory>.ndd-kit.
-Use -DryRun to preview; -Replace explicitly backs up and replaces conflicts.
+Receipts are stored beside each skills directory in <directory>.ndd-kit.
+Existing NDD skills, including local edits, are replaced automatically.
+Successful installs retain no backups. Use -DryRun to preview.
+-Replace is accepted for compatibility; replacement is automatic.
 Uninstall permanently deletes owned skills and all NDD install state, without backups.
 With both agents selected, it also removes this verified clean NDD clone unless -KeepSource is set.
 #>
@@ -93,20 +95,6 @@ function Test-OwnedReceipt([string]$Receipt) {
     $lines = @(Get-Content -LiteralPath $Receipt -Encoding UTF8)
     return $lines.Count -eq 5 -and $lines[0] -eq 'ndd-kit-install-v1' -and $lines[2] -in @('copy', 'link')
 }
-function Test-OwnedUnchanged([string]$Destination, [string]$Receipt) {
-    $record = Get-Entry $Receipt
-    if (-not $record -or $record.PSIsContainer -or (Test-Link $record)) { return $false }
-    $lines = @(Get-Content -LiteralPath $Receipt -Encoding UTF8)
-    if ($lines.Count -ne 5 -or $lines[0] -ne 'ndd-kit-install-v1') { return $false }
-    $item = Get-Entry $Destination
-    if (-not $item) { return $false }
-    if ($lines[2] -eq 'link') {
-        return (Test-Link $item) -and ([string]$item.Target -eq $lines[3])
-    }
-    if ($lines[2] -ne 'copy' -or -not $item.PSIsContainer -or (Test-Link $item)) { return $false }
-    try { return (Get-Fingerprint $Destination) -eq $lines[4] }
-    catch { return $false }
-}
 function Assert-DirectoryPath([string]$Path) {
     if (-not [IO.Path]::IsPathRooted($Path) -or $Path -match '[\r\n\t]') { throw "Use an absolute path: $Path" }
     $current = [IO.Path]::GetFullPath($Path)
@@ -186,6 +174,9 @@ if (-not $Uninstall) {
     foreach ($asset in @('spec.md', 'plan.md')) {
         if (-not (Test-Path -LiteralPath (Join-Path $KitDir "skills\ndd-setup\assets\$asset") -PathType Leaf)) { throw "Missing asset: $asset" }
     }
+    foreach ($resource in @('assets/help.md', 'scripts/ndd-help', 'scripts/ndd-help.cmd', 'scripts/print-help.ps1')) {
+        if (-not (Test-Path -LiteralPath (Join-Path $KitDir "skills/ndd-help/$resource") -PathType Leaf)) { throw "Missing help resource: $resource" }
+    }
     foreach ($resource in @('assets/review.md', 'references/report-updates.md')) {
         if (-not (Test-Path -LiteralPath (Join-Path $KitDir "skills/ndd-review/$resource") -PathType Leaf)) { throw "Missing review resource: $resource" }
     }
@@ -220,9 +211,8 @@ foreach ($target in $Targets) {
         if ($Uninstall) {
             if ((Get-Entry $dest) -and -not (Test-OwnedReceipt $record)) { throw "Cannot establish NDD ownership: $dest. No files removed." }
             Write-Host "  Permanently remove if present (including local edits): $name"
-        } elseif ((Get-Entry $dest) -and -not (Test-OwnedUnchanged $dest $record)) {
-            if (-not $Replace) { throw "Unowned or modified skill: $dest. Back it up/move it manually, or install with -Replace after reviewing -DryRun." }
-            Write-Host "  BACK UP and replace: $name"
+        } elseif (Get-Entry $dest) {
+            Write-Host "  Replace (including local edits; no retained backup): $name"
         } else {
             $mode = if ($Link) { 'link' } else { 'copy' }
             Write-Host "  Install $Version ($mode): $name"
@@ -230,6 +220,8 @@ foreach ($target in $Targets) {
     }
     if ($Uninstall -and (Test-Path -LiteralPath "$target.ndd-kit")) {
         Write-Host "  Permanently remove all receipts, backups and staging files: $target.ndd-kit"
+    } elseif (-not $Uninstall -and (Test-Path -LiteralPath (Join-Path "$target.ndd-kit" 'backups'))) {
+        Write-Host "  Remove previous backups after successful installation: $target.ndd-kit/backups"
     }
 }
 $sourceReason = ''
@@ -317,7 +309,6 @@ try {
         foreach ($name in $Names) {
             $dest = Join-Path $target $name
             $record = Join-Path "$target.ndd-kit" "$name.receipt"
-            if ((Get-Entry $dest) -and -not (Test-OwnedUnchanged $dest $record) -and -not $Replace) { throw "Destination changed: $dest" }
             $stage = Join-Path "$target.ndd-kit" ('stage.' + [Guid]::NewGuid().ToString('N'))
             $null = New-Item -ItemType Directory -Path $stage
             $Stages.Add($stage)
@@ -337,14 +328,14 @@ try {
             if (Get-Entry $record) { Move-Item -LiteralPath $record -Destination (Join-Path $backup 'receipt'); $operation.RecordMoved=$true }
             Move-Item -LiteralPath (Join-Path $stage 'skill') -Destination $dest; $operation.NewInstalled=$true
             Move-Item -LiteralPath (Join-Path $stage 'receipt') -Destination $record; $operation.NewRecorded=$true
-            if ($operation.OldMoved -or $operation.RecordMoved) { Write-Host "  Saved previous state: $backup" }
-            else { Write-Host "  Installed: $name" }
+            Write-Host "  Installed: $name"
         }
     }
 } catch {
     $InstallFailed = $true
     $failure = $_
     Write-Warning 'Installation failed; restoring previous skills and receipts.'
+    $restoreFailed = $false
     for ($i = $Journal.Count - 1; $i -ge 0; $i--) {
         $operation = $Journal[$i]
         try {
@@ -352,7 +343,7 @@ try {
             if ($operation.NewRecorded) { Remove-Item -LiteralPath $operation.Receipt -Force }
             if ($operation.OldMoved) { Move-Item -LiteralPath (Join-Path $operation.Backup 'skill') -Destination $operation.Destination }
             if ($operation.RecordMoved) { Move-Item -LiteralPath (Join-Path $operation.Backup 'receipt') -Destination $operation.Receipt }
-        } catch { Write-Warning "Restore failed; recover from $($operation.Backup): $_" }
+        } catch { $restoreFailed = $true; Write-Warning "Restore failed; recover from $($operation.Backup): $_" }
     }
     throw $failure
 } finally {
@@ -364,6 +355,18 @@ try {
             Remove-Item -LiteralPath $stage -Recurse -Force
         } catch { $cleanupFailed = $true; Write-Warning "Could not clean staging directory $stage`: $_" }
     }
+    # Previous copies exist only for rollback until all selected targets succeed.
+    if (-not $InstallFailed) {
+        foreach ($target in $Targets) {
+            try { Remove-NddEntry (Join-Path "$target.ndd-kit" 'backups') }
+            catch { $cleanupFailed = $true; Write-Warning "Could not remove backups in $target.ndd-kit`: $_" }
+        }
+    } elseif (-not $restoreFailed) {
+        foreach ($operation in $Journal) {
+            try { [IO.Directory]::Delete($operation.Backup) }
+            catch { $cleanupFailed = $true; Write-Warning "Could not remove recovery directory $($operation.Backup): $_" }
+        }
+    }
     foreach ($lock in $Locks) {
         try { Remove-Item -LiteralPath $lock -Force }
         catch { $cleanupFailed = $true; Write-Warning "Could not remove lock $lock`: $_" }
@@ -372,3 +375,6 @@ try {
 }
 Write-Host "Installed NDD $Version. In your project use /ndd-setup (Claude Code) or `$ndd-setup (Codex)."
 Write-Host 'Restart the agent if the skills do not appear.'
+$helpCommand = Join-Path $Targets[0] 'ndd-help/scripts/ndd-help.cmd'
+Write-Host ("Terminal help: & '" + $helpCommand.Replace("'", "''") + "'")
+Write-Host ("For the ndd-help command, add this directory to PATH: " + (Split-Path $helpCommand -Parent))
