@@ -50,7 +50,6 @@ cd nap-driven-development
 
 **3. Installation options:**
 
-Choose one option below.
 
 <details>
 <summary>Install for both agents</summary>
@@ -126,7 +125,6 @@ cd nap-driven-development
 
 **3. Installation options:**
 
-Choose one option below.
 
 <details>
 <summary>Install for both agents</summary>
@@ -185,8 +183,8 @@ If Windows blocks the script, see [Windows installation help](docs/installation.
 
 ---
 
-Restart your agent after installation. `--all` / `-All` installs NDD skills for
-both agents; it does not install the agents themselves.
+Restart your agent after installation.
+
 [Custom installation folders and troubleshooting →](docs/installation.md)
 
 <details>
@@ -261,6 +259,7 @@ If you used a ZIP, download and extract a fresh copy instead of running `git pul
 <summary><strong>Update for Mac</strong></summary>
 
 <details>
+<>
 <summary>Update NDD for both agents</summary>
 
 ```bash
