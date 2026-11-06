@@ -9,7 +9,11 @@ so you can pick up the work in a new session or continue with another agent.
 Start with one task — there is no need to document your entire codebase or replace
 your team's existing rules.
 
-**Describe → approve the spec → approve the plan → implement and verify.**
+```text
+╭──────────╮   ╭──────────────╮   ╭──────────────╮   ╭───────────╮   ╭────────╮
+│ Describe │ → │ Approve spec │ → │ Approve plan │ → │ Implement │ → │ Verify │
+╰──────────╯   ╰──────────────╯   ╰──────────────╯   ╰───────────╯   ╰────────╯
+```
 
 ## Install
 
@@ -34,9 +38,29 @@ git clone https://github.com/avkaz/nap-driven-development.git
 cd nap-driven-development
 ```
 
-**3. Choose one installation option:**
+**3. Installation options:**
 
-**Install for Codex**
+Choose one option below.
+
+<details>
+<summary>Install for both agents</summary>
+
+Optional preview:
+
+```bash
+bash ./install.sh --all --dry-run
+```
+
+Install:
+
+```bash
+bash ./install.sh --all
+```
+
+</details>
+
+<details>
+<summary>Install only for Codex</summary>
 
 Optional preview:
 
@@ -50,7 +74,10 @@ Install:
 bash ./install.sh --codex
 ```
 
-**Install for Claude Code**
+</details>
+
+<details>
+<summary>Install only for Claude Code</summary>
 
 Optional preview:
 
@@ -64,19 +91,7 @@ Install:
 bash ./install.sh --claude
 ```
 
-**Install for both agents**
-
-Optional preview:
-
-```bash
-bash ./install.sh --all --dry-run
-```
-
-Install:
-
-```bash
-bash ./install.sh --all
-```
+</details>
 
 </details>
 
@@ -97,9 +112,29 @@ git clone https://github.com/avkaz/nap-driven-development.git
 cd nap-driven-development
 ```
 
-**3. Choose one installation option:**
+**3. Installation options:**
 
-**Install for Codex**
+Choose one option below.
+
+<details>
+<summary>Install for both agents</summary>
+
+Optional preview:
+
+```powershell
+powershell -NoProfile -File .\install.ps1 -All -DryRun
+```
+
+Install:
+
+```powershell
+powershell -NoProfile -File .\install.ps1 -All
+```
+
+</details>
+
+<details>
+<summary>Install only for Codex</summary>
 
 Optional preview:
 
@@ -113,7 +148,10 @@ Install:
 powershell -NoProfile -File .\install.ps1 -Codex
 ```
 
-**Install for Claude Code**
+</details>
+
+<details>
+<summary>Install only for Claude Code</summary>
 
 Optional preview:
 
@@ -127,19 +165,7 @@ Install:
 powershell -NoProfile -File .\install.ps1 -Claude
 ```
 
-**Install for both agents**
-
-Optional preview:
-
-```powershell
-powershell -NoProfile -File .\install.ps1 -All -DryRun
-```
-
-Install:
-
-```powershell
-powershell -NoProfile -File .\install.ps1 -All
-```
+</details>
 
 If Windows blocks the script, see [Windows installation help](docs/installation.md#windows-execution-policy).
 
@@ -214,8 +240,22 @@ git pull --ff-only
 
 If you used a ZIP, download and extract a fresh copy instead of running `git pull`.
 
-Then repeat **step 3** in [Install](#install) from the updated NDD folder,
-choosing Codex, Claude Code or both agents to match your installation.
+Then run the update command from the updated NDD folder.
+
+**Mac — both agents:**
+
+```bash
+bash ./install.sh --all
+```
+
+**Windows — both agents:**
+
+```powershell
+powershell -NoProfile -File .\install.ps1 -All
+```
+
+For just one agent, replace `--all` with `--codex` or `--claude` on Mac,
+or `-All` with `-Codex` or `-Claude` on Windows.
 If you installed to custom folders, use the same destination options again.
 
 Restart the agent after updating. Existing project specs and plans stay unchanged.
@@ -238,7 +278,7 @@ unrelated skills and other Git settings are preserved. The agent applications
 and their enclosing `.agents` / `.claude` folders are not removed.
 
 <details>
-<summary>Uninstall only Codex</summary>
+<summary>Uninstall NDD for Codex only</summary>
 
 Removes:
 
@@ -281,7 +321,7 @@ powershell -NoProfile -File .\install.ps1 -Codex -Uninstall
 </details>
 
 <details>
-<summary>Uninstall only Claude Code</summary>
+<summary>Uninstall NDD for Claude Code only</summary>
 
 Removes:
 
@@ -324,7 +364,7 @@ powershell -NoProfile -File .\install.ps1 -Claude -Uninstall
 </details>
 
 <details>
-<summary>Uninstall completely</summary>
+<summary>Uninstall NDD completely</summary>
 
 Removes:
 
