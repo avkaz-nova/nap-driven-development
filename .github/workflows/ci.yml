@@ -13,7 +13,8 @@ jobs:
         include:
           - os: macos-latest
             powershell: ''
-          - os: ubuntu-latest
+          # Keep CI stable during GitHub's ubuntu-latest image migrations.
+          - os: ubuntu-24.04
             powershell: ''
           - os: windows-latest
             powershell: powershell
@@ -25,15 +26,15 @@ jobs:
       POWERSHELL_TELEMETRY_OPTOUT: '1'
       PYTHONUTF8: '1'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
       - name: Test installers, digests and distribution
         run: python -m unittest discover -s tests -v
       - name: Build local release artifact
         run: python scripts/build_release.py
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: ndd-${{ matrix.os }}-${{ matrix.powershell || 'bash' }}
           path: dist/*
