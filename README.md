@@ -259,7 +259,6 @@ If you used a ZIP, download and extract a fresh copy instead of running `git pul
 <summary><strong>Update for Mac</strong></summary>
 
 <details>
-<>
 <summary>Update NDD for both agents</summary>
 
 ```bash
