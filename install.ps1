@@ -1,0 +1,249 @@
+<#
+.SYNOPSIS
+Install NDD for Claude Code and/or Codex. PowerShell 5.1+ / 7+ on Windows.
+.DESCRIPTION
+Receipts and backups are stored beside each skills directory in <directory>.ndd-kit.
+Use -DryRun to preview; -Replace explicitly backs up and replaces conflicts.
+#>
+[CmdletBinding()]
+param(
+    [switch]$Claude, [switch]$Codex, [switch]$All,
+    [switch]$Link, [switch]$Uninstall, [switch]$DryRun, [switch]$Replace,
+    [string]$ClaudeDir, [string]$CodexDir
+)
+$ErrorActionPreference = 'Stop'
+$KitDir = $PSScriptRoot
+if ($KitDir -match '[\r\n\t]') { throw 'The distribution path must not contain tabs or line breaks.' }
+$Names = @('ndd-setup', 'ndd-spec', 'ndd-plan', 'ndd-do')
+$UserDirectory = [Environment]::GetFolderPath('UserProfile')
+if ($ClaudeDir) { $Claude = $true }
+else {
+    $configDir = if ($env:CLAUDE_CONFIG_DIR) { $env:CLAUDE_CONFIG_DIR } else { Join-Path $UserDirectory '.claude' }
+    $ClaudeDir = Join-Path $configDir 'skills'
+}
+if ($CodexDir) { $Codex = $true }
+else { $CodexDir = Join-Path $UserDirectory '.agents\skills' }
+if ($All) { $Claude = $true; $Codex = $true }
+if ($Uninstall -and ($Replace -or $Link)) { throw '-Replace and -Link are install-only options.' }
+if (-not $Claude -and -not $Codex) {
+    if (Test-Path -LiteralPath (Split-Path $ClaudeDir -Parent)) { $Claude = $true }
+    $codexHomeDir = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $UserDirectory '.codex' }
+    if ((Test-Path -LiteralPath $codexHomeDir) -or (Test-Path -LiteralPath (Split-Path $CodexDir -Parent))) { $Codex = $true }
+}
+if (-not $Claude -and -not $Codex) { throw 'No agent detected. Select -Claude, -Codex, or -All.' }
+$Targets = @()
+if ($Claude) { $Targets += $ClaudeDir }
+if ($Codex) { $Targets += $CodexDir }
+
+function Get-Entry([string]$Path) {
+    # Unlike Test-Path alone, enumerating the parent also finds broken links.
+    $parent = Split-Path $Path -Parent
+    if (-not (Test-Path -LiteralPath $parent -PathType Container)) { return $null }
+    $leaf = Split-Path $Path -Leaf
+    return Get-ChildItem -LiteralPath $parent -Force | Where-Object { $_.Name -eq $leaf } | Select-Object -First 1
+}
+function Test-Link($Item) {
+    return $null -ne $Item -and ($Item.Attributes -band [IO.FileAttributes]::ReparsePoint)
+}
+function Test-HasSkills([string]$Target) {
+    foreach ($name in $Names) { if (Get-Entry (Join-Path $Target $name)) { return $true } }
+    return $false
+}
+function Get-TextHash([string]$Text) {
+    $sha = [Security.Cryptography.SHA256]::Create()
+    try { return ([BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($Text)))).Replace('-', '').ToLowerInvariant() }
+    finally { $sha.Dispose() }
+}
+function Get-Fingerprint([string]$Path) {
+    $root = [IO.Path]::GetFullPath($Path).TrimEnd('\', '/')
+    $lines = New-Object 'System.Collections.Generic.List[string]'
+    # Walk explicitly: reject links before recursion, including on PowerShell 5.1.
+    $pending = New-Object 'System.Collections.Generic.Stack[string]'
+    $pending.Push($root)
+    while ($pending.Count -gt 0) {
+        foreach ($item in Get-ChildItem -LiteralPath $pending.Pop() -Force) {
+            if (Test-Link $item) { throw "Linked entry cannot be fingerprinted: $($item.FullName)" }
+            $relative = './' + $item.FullName.Substring($root.Length + 1).Replace('\', '/')
+            if ($relative.Contains("`n") -or $relative.Contains("`r") -or $relative.Contains("`t")) { throw "Unsupported filename: $relative" }
+            if ($item.PSIsContainer) { $lines.Add("D`t$relative"); $pending.Push($item.FullName) }
+            else {
+                $digest = (Get-FileHash -LiteralPath $item.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+                $lines.Add("F`t$digest`t$relative")
+            }
+        }
+    }
+    # Receipt fingerprints are platform-local; copied content is verified on the same host.
+    $lines.Sort([StringComparer]::Ordinal)
+    $text = if ($lines.Count) { ($lines -join "`n") + "`n" } else { '' }
+    return Get-TextHash $text
+}
+function Test-OwnedUnchanged([string]$Destination, [string]$Receipt) {
+    $record = Get-Entry $Receipt
+    if (-not $record -or $record.PSIsContainer -or (Test-Link $record)) { return $false }
+    $lines = @(Get-Content -LiteralPath $Receipt -Encoding UTF8)
+    if ($lines.Count -ne 5 -or $lines[0] -ne 'ndd-kit-install-v1') { return $false }
+    $item = Get-Entry $Destination
+    if (-not $item) { return $false }
+    if ($lines[2] -eq 'link') {
+        return (Test-Link $item) -and ([string]$item.Target -eq $lines[3])
+    }
+    if ($lines[2] -ne 'copy' -or -not $item.PSIsContainer -or (Test-Link $item)) { return $false }
+    try { return (Get-Fingerprint $Destination) -eq $lines[4] }
+    catch { return $false }
+}
+function Assert-DirectoryPath([string]$Path) {
+    if (-not [IO.Path]::IsPathRooted($Path) -or $Path -match '[\r\n\t]') { throw "Use an absolute path: $Path" }
+    $current = [IO.Path]::GetFullPath($Path)
+    if ($current.TrimEnd('\', '/') -eq [IO.Path]::GetPathRoot($current).TrimEnd('\', '/')) { throw 'Cannot use a filesystem root as a skills directory.' }
+    while ($current -and $current -ne [IO.Path]::GetPathRoot($current)) {
+        $entry = Get-Entry $current
+        if ($entry -and ((Test-Link $entry) -or -not $entry.PSIsContainer)) { throw "Destination parent must be a real directory: $current" }
+        $current = Split-Path $current -Parent
+    }
+}
+function Remove-NewEntry([string]$Path) {
+    $entry = Get-Entry $Path
+    if (-not $entry) { return }
+    if (Test-Link $entry) { [IO.Directory]::Delete($Path) }
+    else { Remove-Item -LiteralPath $Path -Recurse -Force }
+}
+
+$Version = 'unknown'
+if (-not $Uninstall) {
+    $Version = (Get-Content -LiteralPath (Join-Path $KitDir 'skills\ndd-setup\VERSION') -Raw).Trim()
+    if ($Version -notmatch '^\d+\.\d+\.\d+$') { throw 'Invalid VERSION.' }
+    foreach ($name in $Names) {
+        $source = Join-Path $KitDir "skills\$name"
+        foreach ($file in @('SKILL.md', 'agents\openai.yaml')) {
+            if (-not (Test-Path -LiteralPath (Join-Path $source $file) -PathType Leaf)) { throw "Incomplete distribution: $name/$file" }
+        }
+        if (Test-Link (Get-Entry $source)) { throw "Source must be a real directory: $source" }
+        $null = Get-Fingerprint $source
+    }
+    foreach ($asset in @('spec.md', 'plan.md', 'agents-block.md', 'principles.md')) {
+        if (-not (Test-Path -LiteralPath (Join-Path $KitDir "skills\ndd-setup\assets\$asset") -PathType Leaf)) { throw "Missing asset: $asset" }
+    }
+}
+foreach ($target in $Targets) {
+    if (-not [IO.Path]::IsPathRooted($target)) { throw "Use an absolute path: $target" }
+}
+$Targets = @($Targets | ForEach-Object { [IO.Path]::GetFullPath($_).TrimEnd('\', '/') })
+if (@($Targets | Select-Object -Unique).Count -ne $Targets.Count) { throw 'Targets must be distinct.' }
+foreach ($target in $Targets) {
+    Assert-DirectoryPath $target
+    Assert-DirectoryPath "$target.ndd-kit"
+    Assert-DirectoryPath (Join-Path "$target.ndd-kit" 'backups')
+    $comparison = [StringComparison]::OrdinalIgnoreCase
+    $separator = [IO.Path]::DirectorySeparatorChar
+    if (($target + $separator).StartsWith($KitDir.TrimEnd('\', '/') + $separator, $comparison)) { throw 'Cannot install inside the distribution.' }
+    foreach ($name in $Names) {
+        if (($KitDir + $separator).StartsWith((Join-Path $target $name) + $separator, $comparison)) { throw 'Distribution overlaps the installation destination.' }
+    }
+    if (($KitDir + $separator).StartsWith("$target.ndd-kit" + $separator, $comparison)) { throw 'Distribution overlaps installation metadata.' }
+    foreach ($other in $Targets) {
+        if ($other -eq $target) { continue }
+        if (($target + $separator).StartsWith($other + $separator, $comparison) -or
+            ($target + $separator).StartsWith("$other.ndd-kit" + $separator, $comparison)) { throw 'Targets must not overlap.' }
+    }
+    Write-Host "Target: $target"
+    foreach ($name in $Names) {
+        $dest = Join-Path $target $name
+        $record = Join-Path "$target.ndd-kit" "$name.receipt"
+        $entry = Get-Entry $record
+        if ($entry -and ($entry.PSIsContainer -or (Test-Link $entry))) { throw "Invalid receipt: $record" }
+        if ((Get-Entry $dest) -and -not (Test-OwnedUnchanged $dest $record)) {
+            if (-not $Replace) { throw "Unowned or modified skill: $dest. Back it up/move it manually, or install with -Replace after reviewing -DryRun." }
+            Write-Host "  BACK UP and replace: $name"
+        } elseif ($Uninstall) {
+            Write-Host "  Remove if present (retain backup): $name"
+        } else {
+            $mode = if ($Link) { 'link' } else { 'copy' }
+            Write-Host "  Install $Version ($mode): $name"
+        }
+    }
+}
+if ($DryRun) { Write-Host 'Dry run: no files changed.'; return }
+
+$Locks = New-Object 'System.Collections.Generic.List[string]'
+$Stages = New-Object 'System.Collections.Generic.List[string]'
+$Journal = New-Object 'System.Collections.Generic.List[object]'
+$InstallFailed = $false
+try {
+    foreach ($target in $Targets) {
+        if ($Uninstall -and -not (Test-HasSkills $target)) { continue }
+        $null = New-Item -ItemType Directory -Force -Path "$target.ndd-kit"
+        $lock = Join-Path "$target.ndd-kit" 'lock'
+        # Exclusive file creation also rejects stale locks and concurrent installers.
+        $stream = [IO.File]::Open($lock, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
+        $stream.Dispose()
+        $Locks.Add($lock)
+    }
+    foreach ($target in $Targets) {
+        if ($Uninstall -and -not (Test-HasSkills $target)) { continue }
+        $null = New-Item -ItemType Directory -Force -Path $target
+        foreach ($name in $Names) {
+            $dest = Join-Path $target $name
+            $record = Join-Path "$target.ndd-kit" "$name.receipt"
+            if ((Get-Entry $dest) -and -not (Test-OwnedUnchanged $dest $record) -and -not $Replace) { throw "Destination changed: $dest" }
+            if ($Uninstall -and -not (Get-Entry $dest)) { continue }
+            $stage = Join-Path "$target.ndd-kit" ('stage.' + [Guid]::NewGuid().ToString('N'))
+            $null = New-Item -ItemType Directory -Path $stage
+            $Stages.Add($stage)
+            if (-not $Uninstall) {
+                $source = Join-Path $KitDir "skills\$name"
+                $mode = if ($Link) { 'link' } else { 'copy' }
+                if ($Link) { $null = New-Item -ItemType Junction -Path (Join-Path $stage 'skill') -Target $source }
+                else { Copy-Item -LiteralPath $source -Destination (Join-Path $stage 'skill') -Recurse -Force }
+                $digest = Get-Fingerprint $source
+                if ((Get-Fingerprint (Join-Path $stage 'skill')) -ne $digest) { throw "Copy verification failed: $name" }
+                $receiptText = "ndd-kit-install-v1`n$Version`n$mode`n$source`n$digest`n"
+                [IO.File]::WriteAllText((Join-Path $stage 'receipt'), $receiptText, (New-Object Text.UTF8Encoding($false)))
+            }
+            $backup = Join-Path "$target.ndd-kit" ('backups\' + $name + '.' + [Guid]::NewGuid().ToString('N'))
+            $null = New-Item -ItemType Directory -Force -Path $backup
+            $operation = [PSCustomObject]@{ Destination=$dest; Receipt=$record; Backup=$backup; OldMoved=$false; RecordMoved=$false; NewInstalled=$false; NewRecorded=$false }
+            $Journal.Add($operation)
+            if (Get-Entry $dest) { Move-Item -LiteralPath $dest -Destination (Join-Path $backup 'skill'); $operation.OldMoved=$true }
+            if (Get-Entry $record) { Move-Item -LiteralPath $record -Destination (Join-Path $backup 'receipt'); $operation.RecordMoved=$true }
+            if (-not $Uninstall) {
+                Move-Item -LiteralPath (Join-Path $stage 'skill') -Destination $dest; $operation.NewInstalled=$true
+                Move-Item -LiteralPath (Join-Path $stage 'receipt') -Destination $record; $operation.NewRecorded=$true
+            }
+            if ($operation.OldMoved -or $operation.RecordMoved) { Write-Host "  Saved previous state: $backup" }
+            else { Write-Host "  Installed: $name" }
+        }
+    }
+} catch {
+    $InstallFailed = $true
+    $failure = $_
+    Write-Warning 'Installation failed; restoring previous skills and receipts.'
+    for ($i = $Journal.Count - 1; $i -ge 0; $i--) {
+        $operation = $Journal[$i]
+        try {
+            if ($operation.NewInstalled) { Remove-NewEntry $operation.Destination }
+            if ($operation.NewRecorded) { Remove-Item -LiteralPath $operation.Receipt -Force }
+            if ($operation.OldMoved) { Move-Item -LiteralPath (Join-Path $operation.Backup 'skill') -Destination $operation.Destination }
+            if ($operation.RecordMoved) { Move-Item -LiteralPath (Join-Path $operation.Backup 'receipt') -Destination $operation.Receipt }
+        } catch { Write-Warning "Restore failed; recover from $($operation.Backup): $_" }
+    }
+    throw $failure
+} finally {
+    $cleanupFailed = $false
+    foreach ($stage in $Stages) {
+        # Remove a staged junction itself before recursively deleting its container.
+        try {
+            Remove-NewEntry (Join-Path $stage 'skill')
+            Remove-Item -LiteralPath $stage -Recurse -Force
+        } catch { $cleanupFailed = $true; Write-Warning "Could not clean staging directory $stage`: $_" }
+    }
+    foreach ($lock in $Locks) {
+        try { Remove-Item -LiteralPath $lock -Force }
+        catch { $cleanupFailed = $true; Write-Warning "Could not remove lock $lock`: $_" }
+    }
+    if ($cleanupFailed -and -not $InstallFailed) { throw 'Install applied but cleanup is incomplete; inspect the reported paths before retrying.' }
+}
+if ($Uninstall) { Write-Host 'NDD skills removed. Project specs and instructions were preserved.' }
+else {
+    Write-Host "Installed NDD $Version. In your project use /ndd-setup (Claude Code) or `$ndd-setup (Codex)."
+    Write-Host 'Restart the agent if the skills do not appear.'
+}

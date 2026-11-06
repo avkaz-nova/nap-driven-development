@@ -1,0 +1,39 @@
+name: Verify NDD
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            powershell: ''
+          - os: ubuntu-latest
+            powershell: ''
+          - os: windows-latest
+            powershell: powershell
+          - os: windows-latest
+            powershell: pwsh
+    runs-on: ${{ matrix.os }}
+    env:
+      NDD_TEST_POWERSHELL: ${{ matrix.powershell }}
+      POWERSHELL_TELEMETRY_OPTOUT: '1'
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Test installers, digests and distribution
+        run: python -m unittest discover -s tests -v
+      - name: Build local release artifact
+        run: python scripts/build_release.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ndd-${{ matrix.os }}-${{ matrix.powershell || 'bash' }}
+          path: dist/*
