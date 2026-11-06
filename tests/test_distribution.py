@@ -33,8 +33,39 @@ class DistributionTests(unittest.TestCase):
                 for name in ('spec.md', 'plan.md'):
                     self.assertIn(prefix + 'skills/ndd-setup/assets/' + name, bundle.namelist())
                 self.assertIn(prefix + 'skills/ndd-setup/references/diagrams.md', bundle.namelist())
+                banner = 'docs/assets/nap-driven-development.png'
+                self.assertEqual(bundle.read(prefix + banner), (ROOT / banner).read_bytes())
                 self.assertFalse(any('/.git/' in p or '__pycache__' in p or '/dist/' in p for p in bundle.namelist()))
                 self.assertTrue(bundle.getinfo(prefix + 'install.sh').external_attr >> 16 & 0o100)
+
+    def test_release_normalizes_text_and_preserves_other_files(self) -> None:
+        with tempfile.TemporaryDirectory(prefix='ndd-release-') as directory:
+            root = Path(directory) / 'source'
+            root.mkdir()
+            for name in BUILDER.FILES:
+                (root / name).write_bytes(b'')
+            for name in BUILDER.DIRECTORIES:
+                (root / name).mkdir()
+            setup = root / 'skills/ndd-setup'
+            setup.mkdir()
+            (setup / 'VERSION').write_bytes(b'0.3.0\r\n')
+            text_files = ('README.md', 'LICENSE', '.gitattributes', 'install.sh',
+                          'install.ps1', 'scripts/example.py', 'docs/example.txt',
+                          'skills/example.yaml', 'skills/example.yml')
+            for name in text_files:
+                (root / name).write_bytes(b'first\r\nsecond\r\n')
+            binary = b'\x00\xff\r\n\x89PNG\r\n\x1a\n'
+            for name in ('docs/image.png', 'docs/unknown.asset'):
+                (root / name).write_bytes(binary)
+
+            archive = BUILDER.build_release(Path(directory) / 'output', root=root)
+            with zipfile.ZipFile(archive) as bundle:
+                prefix = archive.stem + '/'
+                for name in text_files:
+                    self.assertEqual(bundle.read(prefix + name), b'first\nsecond\n', name)
+                self.assertEqual(bundle.read(prefix + 'skills/ndd-setup/VERSION'), b'0.3.0\n')
+                for name in ('docs/image.png', 'docs/unknown.asset'):
+                    self.assertEqual(bundle.read(prefix + name), binary, name)
 
     def test_example_plans_match_spec_bodies(self) -> None:
         for folder in (ROOT / 'examples').iterdir():

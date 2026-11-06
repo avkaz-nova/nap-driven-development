@@ -2,20 +2,34 @@
 
 ![Nap-Driven Development — a developer and cat nap while two robot assistants plan and code](docs/assets/nap-driven-development.png)
 
+[![CI](https://github.com/avkaz/nap-driven-development/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/avkaz/nap-driven-development/actions/workflows/ci.yml)
+
 NDD is a lightweight spec-driven workflow for **Claude Code and Codex**, on **Mac
 and Windows**. It turns an idea or bug report into a clear specification, a practical
 plan, and small implementation tasks with checks for the result.
 
-You review the spec and plan before coding begins. Both stay with your project,
-so you can pick up the work in a new session or continue with another agent.
-Start with one task — there is no need to document your entire codebase or replace
-your team's existing rules.
+You review the spec and plan before coding begins. Start with **one task in an
+existing project**. The same spec and plan stay with your project, so you can
+resume in a new session or switch between Claude Code and Codex.
+
+**Your project instructions stay in place.** Setup checks readiness and reports
+blocking conflicts for review; it does not rewrite `AGENTS.md` or `CLAUDE.md` to
+enable NDD. Templates stay with the installed skills.
 
 ```text
 ╭──────────╮   ╭──────────────╮   ╭──────────────╮   ╭───────────╮   ╭────────╮
 │ Describe │ → │ Approve spec │ → │ Approve plan │ → │ Implement │ → │ Verify │
 ╰──────────╯   ╰──────────────╯   ╰──────────────╯   ╰───────────╯   ╰────────╯
 ```
+
+**Example: export tasks to CSV.** The spec defines column order, correct quoting,
+and empty-list behavior. The plan connects each requirement to implementation
+tasks and checks. You approve both before the agent changes code, then review the
+verification results. See the [example spec](examples/002-csv-export/spec.md) and
+[plan](examples/002-csv-export/plan.md)—illustrative documents, not a completed demo.
+
+[Download v0.3.0 (public preview)](https://github.com/avkaz/nap-driven-development/releases/tag/v0.3.0)
+or install with Git below.
 
 ## Install
 
@@ -184,7 +198,7 @@ both agents; it does not install the agents themselves.
 <details>
 <summary>No Git? Download a ZIP instead</summary>
 
-1. On the [repository page](https://github.com/avkaz/nap-driven-development), choose **Code → Download ZIP**.
+1. Open the [v0.3.0 release](https://github.com/avkaz/nap-driven-development/releases/tag/v0.3.0) and download **ndd-kit-0.3.0.zip** from **Assets**.
 2. Extract the ZIP and open Terminal or PowerShell in the extracted folder.
 3. Run **step 3** from the Mac or Windows instructions above.
 

@@ -11,6 +11,8 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 FILES = ('README.md', 'LICENSE', 'CHANGELOG.md', 'install.sh', 'install.ps1', '.gitattributes')
 DIRECTORIES = ('skills', 'docs', 'examples', 'tests', 'scripts')
+TEXT_SUFFIXES = {'.md', '.sh', '.ps1', '.py', '.yaml', '.yml', '.txt'}
+TEXT_NAMES = {'LICENSE', 'VERSION', '.gitattributes'}
 
 
 def build_release(output: Path, *, root: Path = ROOT) -> Path:
@@ -38,8 +40,10 @@ def build_release(output: Path, *, root: Path = ROOT) -> Path:
             mode = 0o755 if path.suffix == '.sh' else 0o644
             info.external_attr = (0o100000 | mode) << 16
             info.compress_type = zipfile.ZIP_DEFLATED
-            # Text assets use LF in archives, independent of checkout settings.
-            content = path.read_bytes().replace(b'\r\n', b'\n')
+            content = path.read_bytes()
+            # Normalize known text assets; preserve binary and unknown formats exactly.
+            if path.suffix.lower() in TEXT_SUFFIXES or path.name in TEXT_NAMES:
+                content = content.replace(b'\r\n', b'\n')
             bundle.writestr(info, content)
     digest = hashlib.sha256(archive.read_bytes()).hexdigest()
     (output / f'{archive.name}.sha256').write_text(f'{digest}  {archive.name}\n', encoding='utf-8')

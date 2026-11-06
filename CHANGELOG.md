@@ -1,6 +1,15 @@
 # Changelog
 
-## 0.3.0 — unreleased
+## 0.3.0 — 2026-11-06 (public preview)
+
+First public GitHub release. Automated installer and packaging checks cover macOS,
+Ubuntu and both Windows PowerShell environments. End-to-end agent behavior still
+needs manual validation; this release is marked as a pre-release.
+
+- Release ZIPs normalize only known text formats and preserve images and unknown
+  file types byte-for-byte, with regression coverage for the README banner.
+- README adds a CI badge, a compact CSV example and a versioned download link.
+- CI uses Node.js 24 actions and pins Ubuntu to 24.04.
 
 - Setup records project/common-Git-directory, key and prefix in `~/.ndd/projects`.
   Full uninstall clears registered, unchanged local prefixes before removing NDD;
@@ -25,7 +34,7 @@
 - Regression coverage for clean removal, old leftover state, nested links, dry-run
   and interrupted deletion. Install/update backup and rollback are unchanged.
 
-## 0.2.0 — unreleased
+## 0.2.0 — development milestone (not published)
 
 - Safe installers for the four named skills: ownership receipts, full-target
   preflight, dry-run, explicit replacement, backups, locks and rollback.
