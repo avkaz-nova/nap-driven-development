@@ -5,16 +5,9 @@
 [![CI](https://github.com/avkaz/nap-driven-development/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/avkaz/nap-driven-development/actions/workflows/ci.yml)
 
 NDD is a lightweight spec-driven workflow for **Claude Code and Codex**, on **Mac
-and Windows**. It turns an idea or bug report into a clear specification, a practical
-plan, and small implementation tasks with checks for the result.
-
-You review the spec and plan before coding begins. Start with **one task in an
-existing project**. The same spec and plan stay with your project, so you can
-resume in a new session or switch between Claude Code and Codex.
-
-**Your project instructions stay in place.** Setup checks readiness and reports
-blocking conflicts for review; it does not rewrite `AGENTS.md` or `CLAUDE.md` to
-enable NDD. Templates stay with the installed skills.
+and Windows**. Describe a change, approve a spec and plan, then let the agent
+implement and verify it. Specs, tasks and results stay in your project, so you can
+resume in another session or switch agents.
 
 ```text
 ╭──────────╮   ╭──────────────╮   ╭──────────────╮   ╭───────────╮   ╭────────╮
@@ -22,534 +15,129 @@ enable NDD. Templates stay with the installed skills.
 ╰──────────╯   ╰──────────────╯   ╰──────────────╯   ╰───────────╯   ╰────────╯
 ```
 
-**Example: export tasks to CSV.** The spec defines column order, correct quoting,
-and empty-list behavior. The plan connects each requirement to implementation
-tasks and checks. You approve both before the agent changes code, then review the
-verification results. See the [example spec](examples/002-csv-export/spec.md) and
-[plan](examples/002-csv-export/plan.md)—illustrative documents, not a completed demo.
-
+[Example spec](examples/002-csv-export/spec.md) ·
+[Example plan](examples/002-csv-export/plan.md) ·
 [Download v0.5.0 (public preview)](https://github.com/avkaz/nap-driven-development/releases/tag/v0.5.0)
-or install with Git below.
 
 ## Install
 
-Install once on each computer. You need **Git** and **Claude Code or Codex**.
-Expand your operating system's instructions below. Complete steps 1 and 2, then choose one option
-in step 3. Run each command separately; optional previews make no changes.
+Requires **Git** and **Claude Code or Codex**.
 
 <details>
-<summary><strong>Install for Mac</strong></summary>
-
-Open **Terminal**.
-
-**1. Download NDD:**
+<summary><strong>Mac</strong></summary>
 
 ```bash
 git clone https://github.com/avkaz/nap-driven-development.git
-```
-
-**2. Open the downloaded folder:**
-
-```bash
 cd nap-driven-development
-```
-
-**3. Installation options:**
-
-Choose one option below.
-
-<details>
-<summary>Install for both agents</summary>
-
-Optional preview:
-
-```bash
-bash ./install.sh --all --dry-run
-```
-
-Install:
-
-```bash
 bash ./install.sh --all
 ```
 
-</details>
-
-<details>
-<summary>Install only for Codex</summary>
-
-Optional preview:
-
-```bash
-bash ./install.sh --codex --dry-run
-```
-
-Install:
-
-```bash
-bash ./install.sh --codex
-```
+Use `--codex` or `--claude` instead of `--all` to install for one agent.
+Add `--dry-run` to preview.
 
 </details>
 
 <details>
-<summary>Install only for Claude Code</summary>
-
-Optional preview:
-
-```bash
-bash ./install.sh --claude --dry-run
-```
-
-Install:
-
-```bash
-bash ./install.sh --claude
-```
-
-</details>
-
-</details>
-
----
-
-<details>
-<summary><strong>Install for Windows</strong></summary>
-
-Open **PowerShell**.
-
-**1. Download NDD:**
+<summary><strong>Windows</strong></summary>
 
 ```powershell
 git clone https://github.com/avkaz/nap-driven-development.git
-```
-
-**2. Open the downloaded folder:**
-
-```powershell
 cd nap-driven-development
-```
-
-**3. Installation options:**
-
-Choose one option below.
-
-<details>
-<summary>Install for both agents</summary>
-
-Optional preview:
-
-```powershell
-powershell -NoProfile -File .\install.ps1 -All -DryRun
-```
-
-Install:
-
-```powershell
 powershell -NoProfile -File .\install.ps1 -All
 ```
 
-</details>
-
-<details>
-<summary>Install only for Codex</summary>
-
-Optional preview:
-
-```powershell
-powershell -NoProfile -File .\install.ps1 -Codex -DryRun
-```
-
-Install:
-
-```powershell
-powershell -NoProfile -File .\install.ps1 -Codex
-```
+Use `-Codex` or `-Claude` instead of `-All` to install for one agent.
+Add `-DryRun` to preview.
 
 </details>
 
-<details>
-<summary>Install only for Claude Code</summary>
+Restart your agent after installation. Alternatively, extract the
+[release ZIP](https://github.com/avkaz/nap-driven-development/releases/tag/v0.5.0)
+and run the installer from that folder.
+[Custom paths and troubleshooting →](docs/installation.md)
 
-Optional preview:
+## Use
 
-```powershell
-powershell -NoProfile -File .\install.ps1 -Claude -DryRun
-```
+Run these commands in your agent's chat. Codex uses `$`; Claude Code uses `/`.
 
-Install:
-
-```powershell
-powershell -NoProfile -File .\install.ps1 -Claude
-```
-
-</details>
-
-If Windows blocks the script, see [Windows installation help](docs/installation.md#windows-execution-policy).
-
-</details>
-
----
-
-Restart your agent after installation. `--all` / `-All` installs NDD skills for
-both agents; it does not install the agents themselves.
-[Custom installation folders and troubleshooting →](docs/installation.md)
-
-<details>
-<summary>No Git? Download a ZIP instead</summary>
-
-1. Open the [v0.5.0 release](https://github.com/avkaz/nap-driven-development/releases/tag/v0.5.0) and download **ndd-kit-0.5.0.zip** from **Assets**.
-2. Extract the ZIP and open Terminal or PowerShell in the extracted folder.
-3. Run **step 3** from the Mac or Windows instructions above.
-
-</details>
-
-## Use it in your project
-
-Open your existing project in Claude Code or Codex. Enter these commands **in the
-agent's chat**, not in the terminal. In Codex, you can also select the skill from
-the skill picker.
-
-| Step | Claude Code | Codex |
+| Action | Codex | Claude Code |
 |---|---|---|
-| Check project and choose prefix | `/ndd-setup` | `$ndd-setup` |
-| Describe a task | `/ndd-spec Fix CSV export` | `$ndd-spec Fix CSV export` |
-| Approve the spec | Say “I approve this spec” when ready | Same |
-| Create a plan | `/ndd-plan 001` | `$ndd-plan 001` |
-| Approve the plan | Say “I approve this plan” when ready | Same |
-| Complete the approved plan | `/ndd-do 001` | `$ndd-do 001` |
-| Show a short reference, even before setup | `/ndd-help` | `$ndd-help` |
-| Review a task (optional) | `/ndd-review 001` | `$ndd-review 001` |
+| Check project and choose prefix | `$ndd-setup` | `/ndd-setup` |
+| Describe a change | `$ndd-spec Fix CSV export` | `/ndd-spec Fix CSV export` |
+| Plan an approved spec | `$ndd-plan 001` | `/ndd-plan 001` |
+| Complete an approved plan | `$ndd-do 001` | `/ndd-do 001` |
+| Execute only task T2 | `$ndd-do 001 T2` | `/ndd-do 001 T2` |
+| Review the latest stage | `$ndd-review 001` | `/ndd-review 001` |
+| Review a specific stage | `$ndd-review 001 plan` | `/ndd-review 001 plan` |
+| Show command reference | `$ndd-help` | `/ndd-help` |
 
-New documents are compact by default: a goal and acceptance checklist for the
-spec, then a short approach and tasks with checks for the plan. Extra detail is
-added only when the change needs it. Existing longer documents still work.
+Approve the spec and plan in chat before proceeding. After showing a spec, the
+agent offers **Approve spec and continue with Plan** for that feature. Selecting
+it approves the spec and starts planning; the plan still needs its own approval.
+Interactive choices depend on the host; a short chat reply also works.
 
-`ndd-do 001` completes all remaining approved tasks and verification. It stops
-for blockers, scope changes or actions needing separate authorization. To work
-on just one task, use `ndd-do 001 T2`.
+`ndd-do 001` completes all remaining tasks and final verification.
+`ndd-do 001 T2` runs only T2 and its checks, then stops. Unfinished prerequisites
+are reported; a later `ndd-do 001` resumes the remaining work.
 
-`ndd-review 001` checks the latest available stage: spec, plan against spec, or
-implementation against both. You can choose a stage with `ndd-review 001 spec`
-(or `ndd-review spec 001`). Without an ID, it proposes your highest-numbered task
-and asks for confirmation. Review reports findings in chat without editing code
-or running tests, then offers to save `review.md`. An existing report can be
-replaced or extended as one checklist, retaining fixed findings and comments.
-Review never replaces your approval of the spec/plan or implementation checks.
+Review is optional. Use `spec`, `plan` or `code` to select a stage, for example
+`ndd-review 001 spec` or `ndd-review 001 code`. Findings appear in chat, with an
+option to save `review.md`. Review does not run tests or replace approval and
+verification. `ndd-help` includes more examples and works before setup.
 
-Setup suggests a personal prefix from your Git name, such as `ak`. Accept it or
-choose your own. After your confirmation, it saves `ndd.prefix` in the existing
-local Git config — no separate project file, and nothing to commit. A new clone
-needs its own setup; use the same prefix on your other computer.
-Setup also records the project and prefix in `~/.ndd/projects`, shared by Claude
-and Codex, so full uninstall can remove the recorded Git setting later.
+## Feature IDs and files
 
-`ndd-plan 001` then means your `ak-001` feature. To select a teammate's feature,
-use its prefix, e.g. `ndd-plan iv-001`.
-Choose different prefixes within the team; ambiguous matches always need clarification.
-
-**Setup preserves your project instructions.** It checks readiness and reports conflicts.
-Editing existing `AGENTS.md` / `CLAUDE.md` requires your approval of a specific fix.
-
-You write specs only for the tasks you choose. No need to document the whole
-existing project. Templates stay with the installed skills; task documents live here:
+Setup confirms a personal prefix such as `ak` and saves it as local Git config
+`ndd.prefix`. Then `001` means `ak-001`; use `iv-001` to select another prefix.
+Numbers advance separately per prefix. Each clone needs its own setup.
 
 ```text
-your-project/
-└── specs/
-    └── ak-001-fix-csv-export/
-        ├── spec.md
-        ├── plan.md
-        └── review.md  (optional)
+specs/
+└── ak-001-fix-csv-export/
+    ├── spec.md
+    ├── plan.md
+    └── review.md  (optional)
 ```
 
-These are ordinary project files: commit them with the code if you want to share
-them. NDD does not commit or push anything automatically.
+Specs contain a goal and acceptance criteria; plans contain tasks and checks.
+Create them only for changes you choose. These are ordinary files you can commit
+with your code. NDD preserves existing `AGENTS.md` / `CLAUDE.md` instructions and
+does not commit, push or deploy automatically.
 
 ## Update
 
-In your cloned NDD folder, download the latest changes:
+Run `git pull --ff-only` in the NDD checkout, then repeat your installation
+command and restart the agent. For ZIP installations, use a fresh release ZIP.
+Use the same custom destination options if applicable.
 
-```sh
-git pull --ff-only
-```
-
-If you used a ZIP, download and extract a fresh copy instead of running `git pull`.
-
-Then choose your operating system and the agents you want to update.
-Run the selected command from the updated NDD folder. Updates replace all six
-NDD skill directories, including local edits, without needing `--replace` /
-`-Replace`. Successful updates keep no backups and remove backups from earlier
-versions. Unrelated skills and project files are preserved.
-
-<details>
-<summary><strong>Update for Mac</strong></summary>
-
-<details>
-<summary>Update NDD for both agents</summary>
-
-```bash
-bash ./install.sh --all
-```
-
-</details>
-
-<details>
-<summary>Update NDD for Codex only</summary>
-
-```bash
-bash ./install.sh --codex
-```
-
-</details>
-
-<details>
-<summary>Update NDD for Claude Code only</summary>
-
-```bash
-bash ./install.sh --claude
-```
-
-</details>
-
-</details>
-
----
-
-<details>
-<summary><strong>Update for Windows</strong></summary>
-
-<details>
-<summary>Update NDD for both agents</summary>
-
-```powershell
-powershell -NoProfile -File .\install.ps1 -All
-```
-
-</details>
-
-<details>
-<summary>Update NDD for Codex only</summary>
-
-```powershell
-powershell -NoProfile -File .\install.ps1 -Codex
-```
-
-</details>
-
-<details>
-<summary>Update NDD for Claude Code only</summary>
-
-```powershell
-powershell -NoProfile -File .\install.ps1 -Claude
-```
-
-</details>
-
-</details>
-
----
-
-If you installed to custom folders, use the same destination options again.
-
-Restart the agent after updating. Existing project specs and plans stay unchanged.
-
-## Help in chat or terminal
-
-In chat, use `$ndd-help` in Codex or `/ndd-help` in Claude Code. The skill returns
-fixed English help with the installed version. It still uses the agent; skill
-instructions cannot disable model reasoning. The terminal command prints the same
-reference directly, without AI, network access or project setup.
-
-After installation, run it immediately by path. For a default Codex installation:
-
-```bash
-# Mac / Linux
-bash "$HOME/.agents/skills/ndd-help/scripts/ndd-help"
-```
-
-```powershell
-# Windows
-& "$HOME\.agents\skills\ndd-help\scripts\ndd-help.cmd"
-```
-
-For the short `ndd-help` command, add that `scripts` directory to your `PATH`.
-For Claude Code use its installed skills directory instead (normally
-`~/.claude/skills`). Each installer prints the exact path, including custom
-locations. See [terminal command setup](docs/installation.md#terminal-help-command)
-for persistent PATH configuration.
-
-Updates replace the command and its shared help text with the skill. Uninstall
-removes them too; a PATH entry you added manually can then be removed manually.
+Updates replace installed NDD skills, including local edits, and remove old
+installation backups. Project files and unrelated skills are preserved.
 
 ## Uninstall
 
-Run from the downloaded NDD folder using the latest installer. Choose one option
-below. Optional previews show the planned actions without deleting anything.
-
-Paths below use `~` for your home folder and assume the default installation
-locations. If you used custom destinations or `CLAUDE_CONFIG_DIR`, use the same
-settings when uninstalling; see [installation options](docs/installation.md).
-If you set `NDD_STATE_DIR` for setup, use that same value for full uninstall.
-
-**Removal is permanent:** local edits inside owned NDD skills and installation
-backups are deleted too. Your project source, specs, plans, project instructions,
-unrelated skills and other Git settings are preserved. The agent applications
-and their enclosing `.agents` / `.claude` folders are not removed.
-
-<details>
-<summary>Uninstall NDD for Codex only</summary>
-
-Removes:
-
-- The six owned skill folders — `ndd-setup`, `ndd-spec`, `ndd-plan`, `ndd-do`,
-  `ndd-help`, `ndd-review` —
-  from `~/.agents/skills`.
-- `~/.agents/skills.ndd-kit`, including installation receipts, backups and leftover
-  staging files.
-
-Keeps the Claude Code installation, the downloaded NDD source folder,
-`~/.ndd/projects` and the `ndd.prefix` settings in your projects.
-
-**Mac:**
-
-Optional preview:
-
-```bash
-bash ./install.sh --codex --uninstall --dry-run
-```
-
-Uninstall:
-
-```bash
-bash ./install.sh --codex --uninstall
-```
-
-**Windows:**
-
-Optional preview:
-
-```powershell
-powershell -NoProfile -File .\install.ps1 -Codex -Uninstall -DryRun
-```
-
-Uninstall:
-
-```powershell
-powershell -NoProfile -File .\install.ps1 -Codex -Uninstall
-```
-
-</details>
-
-<details>
-<summary>Uninstall NDD for Claude Code only</summary>
-
-Removes:
-
-- The six owned skill folders — `ndd-setup`, `ndd-spec`, `ndd-plan`, `ndd-do`,
-  `ndd-help`, `ndd-review` —
-  from `~/.claude/skills`.
-- `~/.claude/skills.ndd-kit`, including installation receipts, backups and leftover
-  staging files.
-
-Keeps the Codex installation, the downloaded NDD source folder,
-`~/.ndd/projects` and the `ndd.prefix` settings in your projects.
-
-**Mac:**
-
-Optional preview:
-
-```bash
-bash ./install.sh --claude --uninstall --dry-run
-```
-
-Uninstall:
-
-```bash
-bash ./install.sh --claude --uninstall
-```
-
-**Windows:**
-
-Optional preview:
-
-```powershell
-powershell -NoProfile -File .\install.ps1 -Claude -Uninstall -DryRun
-```
-
-Uninstall:
-
-```powershell
-powershell -NoProfile -File .\install.ps1 -Claude -Uninstall
-```
-
-</details>
-
-<details>
-<summary>Uninstall NDD completely</summary>
-
-Removes:
-
-- The six owned NDD skill folders from both `~/.agents/skills` and
-  `~/.claude/skills`, including local edits.
-- Both installation metadata folders, `~/.agents/skills.ndd-kit` and
-  `~/.claude/skills.ndd-kit`, including all receipts, backups and leftover staging files.
-- The local Git config entry `ndd.prefix` in each project recorded in
-  `~/.ndd/projects`, only when its value still matches the registered prefix.
-  Other entries and global Git config are preserved.
-- Successfully cleaned project records, then `~/.ndd/projects` if empty and
-  `~/.ndd` if empty.
-- The NDD source clone containing the running installer, only if it is a verified
-  standalone clone of the official repository, is clean and has no unpublished
-  work or linked worktrees.
-
-**Project cleanup continues on errors.** If a project is missing, its prefix has
-changed or its config cannot be updated, the installer warns, keeps that record
-and moves on. These failures do not block removal of NDD skills or source.
-An unreadable or locked registry is also skipped with a warning.
-
-Only registered projects are checked; the installer does not search your disk.
-Unresolved records can remain in `~/.ndd/projects` after uninstall.
-
-**Source cleanup applies only to the clone running this installer.** Other clones
-and downloads are not searched or removed. ZIP folders and modified or unverified
-clones are kept with an explanation. Add `--keep-source` on Mac or `-KeepSource` on
-Windows to preserve the source clone intentionally; project Git cleanup still runs.
-See [source cleanup checks](docs/installation.md#source-clone-cleanup) for details.
-
-**Mac:**
-
-Optional preview:
-
-```bash
-bash ./install.sh --all --uninstall --dry-run
-```
-
-Uninstall:
+Run from the NDD folder:
 
 ```bash
 bash ./install.sh --all --uninstall
 ```
 
-**Windows:**
-
-Optional preview:
-
-```powershell
-powershell -NoProfile -File .\install.ps1 -All -Uninstall -DryRun
-```
-
-Uninstall:
-
 ```powershell
 powershell -NoProfile -File .\install.ps1 -All -Uninstall
 ```
 
-</details>
+Use `--codex` / `--claude` or `-Codex` / `-Claude` for one agent; add
+`--dry-run` / `-DryRun` to preview. Use the original custom destinations and
+`NDD_STATE_DIR` if configured.
+
+Removal deletes NDD skills, local skill edits and installation metadata/backups.
+Full removal also clears registered, unchanged project prefixes and can delete
+the clean official source clone running the installer. Add `--keep-source` /
+`-KeepSource` to retain it. Single-agent removal keeps project prefixes and the
+source clone. Project code, specs, plans and unrelated skills are preserved.
+[Removal details and recovery →](docs/installation.md#uninstall)
 
 ## Learn more
 
-- [Example spec](examples/002-csv-export/spec.md) and [plan](examples/002-csv-export/plan.md)
 - [Project setup](docs/setup.md)
 - [Workflow and approvals](docs/workflow.md)
 - [Installation options and troubleshooting](docs/installation.md)

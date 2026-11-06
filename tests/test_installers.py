@@ -379,8 +379,7 @@ function Remove-Item {
 
     def test_missing_resources_fail_before_writes(self) -> None:
         for resource in ('ndd-help/SKILL.md', 'ndd-help/assets/help.md',
-                         'ndd-help/scripts/ndd-help', 'ndd-help/scripts/ndd-help.cmd',
-                         'ndd-help/scripts/print-help.ps1', 'ndd-review/agents/openai.yaml',
+                         'ndd-review/agents/openai.yaml',
                          'ndd-review/assets/review.md', 'ndd-review/references/report-updates.md'):
             with self.subTest(missing=resource):
                 path = self.distribution / 'skills' / resource
@@ -746,25 +745,28 @@ function Copy-Item {
         self.run_installer('--uninstall')
         self.assertFalse(self.state.exists())
 
-    def test_terminal_help_install_update_and_uninstall(self) -> None:
-        # Mimic a ZIP extractor that loses Unix executable permissions.
-        if not WINDOWS:
-            (self.distribution / 'skills/ndd-help/scripts/ndd-help').chmod(0o644)
+    def test_update_removes_terminal_help_and_preserves_chat_resources(self) -> None:
+        # Install the previous layout with genuine receipts, then update it.
+        legacy_scripts = self.distribution / 'skills/ndd-help/scripts'
+        legacy_scripts.mkdir()
+        for name in ('ndd-help', 'ndd-help.cmd', 'print-help.ps1'):
+            (legacy_scripts / name).write_text('legacy launcher fixture\n')
         self.run_installer()
-        self.run_installer()  # Replacement also refreshes the CLI and shared text.
-        version = (self.distribution / 'skills/ndd-setup/VERSION').read_text().strip()
-        expected = (self.distribution / 'skills/ndd-help/assets/help.md').read_text(encoding='utf-8')
-        expected = expected.replace('{{VERSION}}', version)
+        self.assertTrue((self.target / 'ndd-help/scripts/ndd-help').is_file())
+        shutil.rmtree(legacy_scripts)
+        expected = snapshot(self.distribution / 'skills/ndd-help')
+        version = (self.distribution / 'skills/ndd-setup/VERSION').read_bytes()
+        result = self.run_installer()
+        self.assertNotIn('Terminal help:', result.stdout)
+        self.assertNotIn('add this directory to PATH', result.stdout)
+        self.assertEqual(snapshot(self.target / 'ndd-help'), expected)
+        self.assertFalse((self.target / 'ndd-help/scripts').exists())
+        self.run_installer()  # Reinstall remains idempotent.
         shutil.rmtree(self.distribution / 'skills')
-        cli_dir = self.target / 'ndd-help/scripts'
-        environment = dict(os.environ, PATH=str(cli_dir) + os.pathsep + os.environ['PATH'])
-        command = ['cmd.exe', '/d', '/c', 'ndd-help'] if WINDOWS else ['ndd-help']
-        result = subprocess.run(command, cwd=self.root, env=environment, capture_output=True,
-                                text=True, encoding='utf-8', timeout=15)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(result.stdout, expected)
+        self.assertEqual(snapshot(self.target / 'ndd-help'), expected)
+        self.assertEqual((self.target / 'ndd-setup/VERSION').read_bytes(), version)
         self.run_installer('--uninstall')
-        self.assertFalse(cli_dir.exists())
+        self.assertFalse((self.target / 'ndd-help').exists())
 
     def test_bundled_templates_work_without_source_or_project_setup(self) -> None:
         expected = {name: (self.distribution / 'skills/ndd-setup/assets' / name).read_bytes()

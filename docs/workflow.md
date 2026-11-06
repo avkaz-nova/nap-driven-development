@@ -21,6 +21,15 @@ The agent records your approval in the documents. Calling the next command alone
 does not approve a draft. An explicit “approve this plan and implement it” can
 cover both actions without another confirmation.
 
+After presenting a spec ready for approval, the agent offers **Approve spec and
+continue with Plan <id>**, using the resolved feature ID. Selecting it records
+spec approval and starts `ndd-plan` for that feature. **Approve spec only** saves
+approval without starting a plan; the agent then offers **Continue with Plan <id>**.
+**Request changes** keeps the spec unapproved. Interactive choices appear where
+the host supports them; otherwise a short chat reply selects the action.
+No selection means no approval or transition. Planning still ends with a separate
+plan approval; continuing does not authorize implementation.
+
 ## Compact documents
 
 For an ordinary task, the spec is a goal plus an AC checklist, usually 150–300

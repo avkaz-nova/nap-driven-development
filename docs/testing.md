@@ -61,9 +61,9 @@ checks. Distribution tests verify metadata/resources; installer tests also cover
 a synthetic four-skill 0.3.0 layout with genuine installer-generated receipts,
 upgrade/reinstall to six skills, missing resources, automatic replacement of
 existing NDD skill names and local edits, and removal of retained backups.
-Terminal help tests compare output with the shared reference, cover version/resource
-failures and verify the installed command through PATH after source removal.
-They do not prove that either agent follows the help or review instructions.
+Installer checks also verify that updates remove legacy terminal help launchers
+while preserving the chat reference, including after source removal. Automated
+checks do not prove that either agent follows the help or review instructions.
 
 ## Compact workflow checks
 
@@ -88,3 +88,20 @@ The example consistency test covers both compact task-based AC references and
 legacy coverage tables, including real spec-body checksums. Native agent behavior
 and latency improvements require observations; shorter instructions alone do not
 prove either.
+
+## Spec-to-plan continuation
+
+In a disposable project, check both interactive-choice and text-only hosts:
+
+- A spec ready for approval offers approve-and-continue, approve-only and changes,
+  with its actual qualified ID or unambiguous project-relative spec path.
+- Approve-and-continue records approval and loads `ndd-plan` for that same feature;
+  the plan remains a draft until separately approved. No implementation starts.
+- Approve-only does not create a plan; a subsequent Continue with Plan selection
+  does. Silence, a default selection or requesting changes does not grant approval.
+- A clarifying spec offers no approval/continuation until its questions are resolved.
+- Existing IDs and custom paths are preserved. Hosts without interactive choices
+  accept a short chat reply without requiring the full skill command.
+
+These are manual behavioral checks; packaging and metadata tests cannot verify
+that a host displays a button or that an agent follows the transition correctly.

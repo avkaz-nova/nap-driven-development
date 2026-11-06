@@ -174,9 +174,7 @@ if (-not $Uninstall) {
     foreach ($asset in @('spec.md', 'plan.md')) {
         if (-not (Test-Path -LiteralPath (Join-Path $KitDir "skills\ndd-setup\assets\$asset") -PathType Leaf)) { throw "Missing asset: $asset" }
     }
-    foreach ($resource in @('assets/help.md', 'scripts/ndd-help', 'scripts/ndd-help.cmd', 'scripts/print-help.ps1')) {
-        if (-not (Test-Path -LiteralPath (Join-Path $KitDir "skills/ndd-help/$resource") -PathType Leaf)) { throw "Missing help resource: $resource" }
-    }
+    if (-not (Test-Path -LiteralPath (Join-Path $KitDir 'skills/ndd-help/assets/help.md') -PathType Leaf)) { throw 'Missing help resource: assets/help.md' }
     foreach ($resource in @('assets/review.md', 'references/report-updates.md')) {
         if (-not (Test-Path -LiteralPath (Join-Path $KitDir "skills/ndd-review/$resource") -PathType Leaf)) { throw "Missing review resource: $resource" }
     }
@@ -375,6 +373,3 @@ try {
 }
 Write-Host "Installed NDD $Version. In your project use /ndd-setup (Claude Code) or `$ndd-setup (Codex)."
 Write-Host 'Restart the agent if the skills do not appear.'
-$helpCommand = Join-Path $Targets[0] 'ndd-help/scripts/ndd-help.cmd'
-Write-Host ("Terminal help: & '" + $helpCommand.Replace("'", "''") + "'")
-Write-Host ("For the ndd-help command, add this directory to PATH: " + (Split-Path $helpCommand -Parent))

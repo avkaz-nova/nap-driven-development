@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Expand chat help with individual-task execution and spec/plan/code review examples.
+- Offer spec approval with continuation to planning, using interactive choices
+  where supported and short chat replies elsewhere. Keep plan approval separate.
+- Shorten the README and move installation/removal details to the dedicated guide.
+- Remove terminal help launchers and PATH instructions; retain chat help and both
+  installers. Updates remove previously installed launchers with the help skill.
+
 ## 0.5.0 — 2026-11-06 (public preview)
 
 - Automatically replace all six installed NDD skills, including local edits,

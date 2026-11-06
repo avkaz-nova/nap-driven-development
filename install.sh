@@ -169,9 +169,7 @@ if [[ $UNINSTALL -eq 0 ]]; then
   for asset in spec.md plan.md; do
     [[ -f "$KIT_DIR/skills/ndd-setup/assets/$asset" ]] || fail "Missing asset: $asset"
   done
-  for resource in assets/help.md scripts/ndd-help scripts/ndd-help.cmd scripts/print-help.ps1; do
-    [[ -f "$KIT_DIR/skills/ndd-help/$resource" ]] || fail "Missing help resource: $resource"
-  done
+  [[ -f "$KIT_DIR/skills/ndd-help/assets/help.md" ]] || fail "Missing help resource: assets/help.md"
   for resource in assets/review.md references/report-updates.md; do
     [[ -f "$KIT_DIR/skills/ndd-review/$resource" ]] || fail "Missing review resource: $resource"
   done
@@ -334,8 +332,6 @@ for target in "${TARGETS[@]}"; do
     src="$KIT_DIR/skills/$name"
     if [[ "$MODE" == link ]]; then ln -s "$src" "$stage/skill"
     else cp -R "$src" "$stage/skill"; fi
-    # ZIP extractors may not preserve executable permission bits.
-    if [[ "$name" == ndd-help && "$MODE" == copy ]]; then chmod +x "$stage/skill/scripts/ndd-help"; fi
     digest=$(fingerprint "$src")
     [[ "$(fingerprint "$stage/skill")" == "$digest" ]] || fail "Copy verification failed: $name"
     printf 'ndd-kit-install-v1\n%s\n%s\n%s\n%s\n' "$VERSION" "$MODE" "$src" "$digest" > "$stage/receipt"
@@ -354,5 +350,3 @@ done
 SUCCESS=1
 printf '\nInstalled NDD %s. In your project use /ndd-setup (Claude Code) or $ndd-setup (Codex).\n' "$VERSION"
 echo 'Restart the agent if the skills do not appear.'
-printf 'Terminal help: bash %q\n' "${TARGETS[0]}/ndd-help/scripts/ndd-help"
-printf 'For the ndd-help command, add this directory to PATH: %s\n' "${TARGETS[0]}/ndd-help/scripts"

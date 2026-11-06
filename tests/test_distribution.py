@@ -33,8 +33,7 @@ class DistributionTests(unittest.TestCase):
                 for name in ('spec.md', 'plan.md'):
                     self.assertIn(prefix + 'skills/ndd-setup/assets/' + name, bundle.namelist())
                 self.assertIn(prefix + 'skills/ndd-setup/references/diagrams.md', bundle.namelist())
-                for name in ('SKILL.md', 'agents/openai.yaml', 'assets/help.md',
-                             'scripts/ndd-help', 'scripts/ndd-help.cmd', 'scripts/print-help.ps1'):
+                for name in ('SKILL.md', 'agents/openai.yaml', 'assets/help.md'):
                     self.assertIn(prefix + 'skills/ndd-help/' + name, bundle.namelist())
                 for name in ('SKILL.md', 'agents/openai.yaml', 'assets/review.md',
                              'references/report-updates.md'):
@@ -43,7 +42,8 @@ class DistributionTests(unittest.TestCase):
                 self.assertEqual(bundle.read(prefix + banner), (ROOT / banner).read_bytes())
                 self.assertFalse(any('/.git/' in p or '__pycache__' in p or '/dist/' in p for p in bundle.namelist()))
                 self.assertTrue(bundle.getinfo(prefix + 'install.sh').external_attr >> 16 & 0o100)
-                self.assertTrue(bundle.getinfo(prefix + 'skills/ndd-help/scripts/ndd-help').external_attr >> 16 & 0o100)
+                self.assertFalse(any(p.startswith(prefix + 'skills/ndd-help/scripts/')
+                                     for p in bundle.namelist()))
 
     def test_release_normalizes_text_and_preserves_other_files(self) -> None:
         with tempfile.TemporaryDirectory(prefix='ndd-release-') as directory:
@@ -57,7 +57,7 @@ class DistributionTests(unittest.TestCase):
             setup.mkdir()
             (setup / 'VERSION').write_bytes(b'0.3.0\r\n')
             text_files = ('README.md', 'LICENSE', '.gitattributes', 'install.sh',
-                          'install.ps1', 'scripts/example.py', 'scripts/ndd-help', 'docs/example.txt',
+                          'install.ps1', 'scripts/example.py', 'scripts/example.ps1', 'docs/example.txt',
                           'skills/example.yaml', 'skills/example.yml')
             for name in text_files:
                 (root / name).write_bytes(b'first\r\nsecond\r\n')

@@ -1,6 +1,6 @@
 NDD {{VERSION}} is a simple spec-driven workflow: describe a change, agree on a short specification and plan, then complete the approved plan and verify it.
 
-These are chat commands, not terminal commands. Codex uses `$`; Claude Code uses `/`. The terminal command `ndd-help` prints this same reference without AI.
+These are chat commands, not terminal commands. Codex uses `$`; Claude Code uses `/`.
 
 | Codex example | Claude Code example | Purpose |
 |---|---|---|
@@ -13,9 +13,30 @@ These are chat commands, not terminal commands. Codex uses `$`; Claude Code uses
 
 Workflow: describe → spec → user approves spec → plan → user approves plan → implement and verify.
 
-Specs contain a goal and acceptance-criteria checklist; plans contain an approach and tasks/checks. Extra sections appear when useful, and existing longer documents still work. `ndd-do 001 T2` limits execution to T2; `ndd-do 001` continues through the plan unless blocked or separate authorization is needed.
+Specs contain a goal and acceptance-criteria checklist; plans contain an approach and tasks/checks. Extra sections appear when useful, and existing longer documents still work.
 
-Review is optional: it neither grants approval nor replaces verification. It accepts an optional feature and optional `spec`, `plan`, or `code` mode in either order. Without a feature, it proposes the highest-numbered specification for the current prefix and asks for confirmation.
+Executing a plan (examples use Codex; use `/` instead of `$` in Claude Code):
+
+| Example | What runs |
+|---|---|
+| `$ndd-do 001` | All remaining tasks in order, followed by final verification. |
+| `$ndd-do 001 T2` | Only task T2 and its required checks; stops afterward. |
+| `$ndd-do ak-001 T2` | Only T2 in the explicitly selected feature ak-001. |
+
+`001` is the feature number; `T2` is a task ID from its `plan.md`. For a plan with T1, T2 and T3, if T1 is complete, `ndd-do 001` continues with T2 and T3. To do only T2, use `ndd-do 001 T2`; a later `ndd-do 001` resumes the remaining work. If T2 needs an unfinished T1, the agent reports that prerequisite instead of silently doing T1. Execution requires an approved, current plan and stops for blockers, scope changes or actions needing separate authorization.
+
+Review is optional: it neither grants approval nor replaces verification.
+
+| Example | What is reviewed |
+|---|---|
+| `$ndd-review 001` | The latest available stage: code, plan or spec. |
+| `$ndd-review 001 spec` | The specification: clarity, contradictions and acceptance criteria. |
+| `$ndd-review 001 plan` | The plan against the spec: coverage, tasks and verification. |
+| `$ndd-review 001 code` | The implementation against the spec and plan. |
+| `$ndd-review plan ak-001` | The same plan review with mode first and an explicit prefix. |
+| `$ndd-review` | Proposes the highest-numbered specification for the current prefix and asks for confirmation. |
+
+Review reports findings in chat without changing code or running tests, then offers to save `review.md`.
 
 Illustrative IDs and file locations:
 

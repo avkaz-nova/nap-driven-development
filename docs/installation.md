@@ -31,50 +31,6 @@ Link mode loads skills directly from the checkout, so pulling changes updates
 what the agent uses immediately. Keep that checkout in place. Normal installation
 copies the skills and works without the downloaded folder.
 
-## Terminal help command
-
-The `ndd-help` skill includes a terminal command in its `scripts` directory:
-`ndd-help` for Bash and `ndd-help.cmd` for Windows. It prints the same predefined
-English Markdown reference used by the chat skill and reads VERSION from the
-adjacent `ndd-setup` installation. No Python, agent or network is needed.
-Missing or invalid version data produces an incomplete-installation notice with
-the reference; missing/unreadable help text produces an error and nonzero exit.
-Arguments are ignored, just as with the chat help skill.
-
-Installers copy these files with the skill and print the directory to add to PATH.
-They do not edit shell profiles or persistent environment variables. Choose one
-installed agent's help directory; if you remove that agent later, switch to the
-remaining agent's directory.
-
-For the default Codex installation on Mac, enable the command in the current shell:
-
-```bash
-export PATH="$HOME/.agents/skills/ndd-help/scripts:$PATH"
-ndd-help
-```
-
-To keep it available in future zsh sessions, add that export line once to
-`~/.zshrc` (or use your shell's normal startup file). For Claude Code, substitute
-`$HOME/.claude/skills/ndd-help/scripts`, respecting `CLAUDE_CONFIG_DIR` if set.
-
-On Windows, enable the default Codex command in the current PowerShell session:
-
-```powershell
-$env:Path = "$HOME\.agents\skills\ndd-help\scripts;" + $env:Path
-ndd-help
-```
-
-For future sessions, add the full directory printed by the installer to your user
-Path via **Environment Variables**, then open a new terminal. The `.cmd` launcher
-uses Windows PowerShell with a process-only execution-policy bypass for the
-bundled read-only helper; it does not change persistent execution policy.
-PowerShell 7 can also run `scripts/print-help.ps1` directly.
-
-Custom installations work the same way; always use the installed path printed by
-the installer. Copy installations keep working after the downloaded source folder
-is removed. Link installations require the source folder to remain available.
-Uninstall removes the command with its skill, without editing your PATH.
-
 ## Windows execution policy
 
 If Windows blocks a script you have inspected, use this process-only override
@@ -110,6 +66,29 @@ information still blocks uninstall.
    no installer is active. Keep staging files until recovery is complete.
 4. Preview again, then retry. On Windows, close processes holding files in a
    source clone that could not be removed.
+
+## Uninstall
+
+Use `--uninstall` / `-Uninstall` with your original agent and destination options.
+Removal permanently deletes the six owned NDD skill folders and the adjacent
+`<skills-directory>.ndd-kit` metadata, including local skill edits, receipts,
+backups and staging files. The agent applications and enclosing `.agents` /
+`.claude` folders remain, as do project code, specs, plans, instructions, unrelated
+skills and other Git settings.
+
+Single-agent removal keeps the other agent's installation, the source folder and
+project prefix registry. Full removal (`--all` / `-All`) also cleans registered
+project prefixes and may delete the running source clone, as described below.
+Use the same `NDD_STATE_DIR` used during setup if it was customized.
+
+Project cleanup continues on errors: missing projects, changed prefixes and
+unwritable configs are reported and their records retained. An unreadable or
+locked registry is skipped with a warning. Only recorded projects are checked;
+no disk search is performed. These errors do not prevent skill/source removal.
+
+Older versions included a terminal `ndd-help` command. Updating removes its
+launchers; remove any manually added `ndd-help/scripts` PATH entry yourself.
+Chat help remains available as `$ndd-help` or `/ndd-help`.
 
 ## Source clone cleanup
 

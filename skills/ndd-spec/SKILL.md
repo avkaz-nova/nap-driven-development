@@ -8,9 +8,10 @@ disable-model-invocation: true
 # ndd-spec
 
 Create or revise `specs/PREFIX-NNN-feature-slug/spec.md`, or an explicitly requested
-project-relative feature path. This phase may edit only that specification and
-create its containing folder. Read applicable project instructions in place;
-preserve unrelated work. Use the user's language. No project manifest is required.
+project-relative feature path. Until the user chooses to continue to planning,
+this phase may edit only that specification and create its containing folder.
+Read applicable project instructions in place; preserve unrelated work. Use the
+user's language. No project manifest is required.
 If a legacy manifest exists, follow the [existing-project guidance](../ndd-setup/references/project-state.md).
 
 1. Resolve the project and feature using the shared
@@ -47,9 +48,23 @@ If a legacy manifest exists, follow the [existing-project guidance](../ndd-setup
 4. Check ambiguity, contradictions, missing boundary cases and AC coverage.
    Use `clarifying` if material questions remain, otherwise `draft`.
 5. Show the short spec once (or the changed parts when revising), without a
-   duplicate summary, and ask for review. Only after the user explicitly approves
-   this version, set `status: approved`. A clear approval in chat is sufficient;
-   don't require manual YAML edits or an additional approval command.
+   duplicate summary, and ask for review. When ready for approval, offer
+   "Approve spec and continue with Plan <id>", "Approve spec only", and
+   "Request changes". Substitute the resolved qualified ID (e.g. `ak-001`),
+   or the project-relative spec path when needed to avoid ambiguity. Use the
+   host's interactive choice tool when available and allowed in the current mode;
+   otherwise offer the choices in chat. Do not invent clickable Markdown links
+   or require the user to type a skill command.
+   Only an explicit response approves this version; a displayed/default choice
+   or silence does not. Record `status: approved` after approval. If the user
+   selects approve-and-continue, load the sibling [ndd-plan skill](../ndd-plan/SKILL.md)
+   and follow it for that same feature in this conversation. This choice explicitly
+   requests planning; the resulting plan still needs separate approval before
+   implementation. Approval alone does not start planning: offer
+   "Continue with Plan <id>" after an approve-only response and wait for selection,
+   then perform the same handoff to `ndd-plan`.
+   For a clarifying spec, resolve questions first without offering approval or
+   continuation. A clear chat response is sufficient; do not require YAML edits.
 
 When changing an existing approved/in-progress/done spec, return it to draft
 (or clarifying), retain history/progress in the existing plan, and explain that
@@ -59,7 +74,7 @@ requirements belong in that body, never only in frontmatter.
 
 Editorial body changes also invalidate the digest; confirm and re-plan briefly
 rather than silently bypassing the check. A lifecycle status change alone does
-not invalidate it. Next: `ndd-plan <feature id>`.
+not invalidate it. The manual alternative is `ndd-plan <feature id>`.
 
 When a diagram clarifies users, scenarios or behaviour, use the
 [rounded Unicode diagram style](../ndd-setup/references/diagrams.md).
