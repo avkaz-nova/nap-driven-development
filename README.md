@@ -24,7 +24,7 @@ tasks and checks. You approve both before the agent changes code, then review th
 verification results. See the [example spec](examples/002-csv-export/spec.md) and
 [plan](examples/002-csv-export/plan.md)—illustrative documents, not a completed demo.
 
-[Download v0.5.0 (public preview)](https://github.com/avkaz/nap-driven-development/releases/tag/v0.5.0)
+[Download v0.6.0 (public preview)](https://github.com/avkaz/nap-driven-development/releases/tag/v0.6.0)
 or install with Git below.
 
 ## Install
@@ -190,7 +190,7 @@ Restart your agent after installation.
 <details>
 <summary>No Git? Download a ZIP instead</summary>
 
-1. Open the [v0.5.0 release](https://github.com/avkaz/nap-driven-development/releases/tag/v0.5.0) and download **ndd-kit-0.5.0.zip** from **Assets**.
+1. Open the [v0.6.0 release](https://github.com/avkaz/nap-driven-development/releases/tag/v0.6.0) and download **ndd-kit-0.6.0.zip** from **Assets**.
 2. Extract the ZIP and open Terminal or PowerShell in the extracted folder.
 3. Run **step 3** from the Mac or Windows instructions above.
 

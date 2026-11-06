@@ -2,10 +2,14 @@
 
 ## Unreleased
 
+## 0.6.0 — 2026-11-06 (public preview)
+
 - Expand chat help with individual-task execution and spec/plan/code review examples.
 - Offer spec approval with continuation to planning, using interactive choices
   where supported and short chat replies elsewhere. Keep plan approval separate.
 - Shorten the README and move installation/removal details to the dedicated guide.
+- Explicitly respect existing global, project and nested instructions in all six
+  skills, surfacing conflicts before affected work proceeds.
 - Remove terminal help launchers and PATH instructions; retain chat help and both
   installers. Updates remove previously installed launchers with the help skill.
 
