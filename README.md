@@ -18,11 +18,13 @@ your team's existing rules.
 ## Install
 
 Install once on each computer. You need **Git** and **Claude Code or Codex**.
-Click your operating system below. Complete steps 1 and 2, then choose one option
+Expand your operating system's instructions below. Complete steps 1 and 2, then choose one option
 in step 3. Run each command separately; optional previews make no changes.
 
+### 🍎 Mac
+
 <details>
-<summary><strong>Mac — show installation</strong></summary>
+<summary><strong>Show Mac installation instructions</strong></summary>
 
 Open **Terminal**.
 
@@ -95,8 +97,12 @@ bash ./install.sh --claude
 
 </details>
 
+---
+
+### 🪟 Windows
+
 <details>
-<summary><strong>Windows — show installation</strong></summary>
+<summary><strong>Show Windows installation instructions</strong></summary>
 
 Open **PowerShell**.
 
@@ -171,6 +177,8 @@ If Windows blocks the script, see [Windows installation help](docs/installation.
 
 </details>
 
+---
+
 Restart your agent after installation. `--all` / `-All` installs NDD skills for
 both agents; it does not install the agents themselves.
 [Custom installation folders and troubleshooting →](docs/installation.md)
@@ -229,9 +237,6 @@ them. NDD does not commit or push anything automatically.
 
 ## Update
 
-<details>
-<summary>Update NDD</summary>
-
 In your cloned NDD folder, download the latest changes:
 
 ```sh
@@ -240,27 +245,84 @@ git pull --ff-only
 
 If you used a ZIP, download and extract a fresh copy instead of running `git pull`.
 
-Then run the update command from the updated NDD folder.
+Then choose your operating system and the agents you want to update.
+Run the selected command from the updated NDD folder.
 
-**Mac — both agents:**
+### 🍎 Mac
+
+<details>
+<summary><strong>Update for Mac</strong></summary>
+
+<details>
+<summary>Update NDD for both agents</summary>
 
 ```bash
 bash ./install.sh --all
 ```
 
-**Windows — both agents:**
+</details>
+
+<details>
+<summary>Update NDD for Codex only</summary>
+
+```bash
+bash ./install.sh --codex
+```
+
+</details>
+
+<details>
+<summary>Update NDD for Claude Code only</summary>
+
+```bash
+bash ./install.sh --claude
+```
+
+</details>
+
+</details>
+
+---
+
+### 🪟 Windows
+
+<details>
+<summary><strong>Update for Windows</strong></summary>
+
+<details>
+<summary>Update NDD for both agents</summary>
 
 ```powershell
 powershell -NoProfile -File .\install.ps1 -All
 ```
 
-For just one agent, replace `--all` with `--codex` or `--claude` on Mac,
-or `-All` with `-Codex` or `-Claude` on Windows.
+</details>
+
+<details>
+<summary>Update NDD for Codex only</summary>
+
+```powershell
+powershell -NoProfile -File .\install.ps1 -Codex
+```
+
+</details>
+
+<details>
+<summary>Update NDD for Claude Code only</summary>
+
+```powershell
+powershell -NoProfile -File .\install.ps1 -Claude
+```
+
+</details>
+
+</details>
+
+---
+
 If you installed to custom folders, use the same destination options again.
 
 Restart the agent after updating. Existing project specs and plans stay unchanged.
-
-</details>
 
 ## Uninstall
 
