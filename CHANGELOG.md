@@ -2,8 +2,13 @@
 
 ## 0.3.0 — unreleased
 
-- Setup is now a read-only readiness check by default: no instruction blocks,
-  imports, manifest, project templates or empty specs directory.
+- Setup checks readiness without creating instruction blocks, imports, manifests,
+  project templates or empty specs directories.
+- Setup proposes a personal prefix and saves the confirmed choice in local Git
+  config. New feature ids use `PREFIX-NNN-slug`; bare numbers use the current
+  prefix. Existing ids are preserved and ambiguous matches require clarification.
+- README groups optional install/removal previews with their respective actions,
+  with one command per copyable block.
 - Removed the redundant setup dry-run option; installer dry-run remains available.
 - Spec and plan use only bundled templates; legacy project files are preserved.
 - Uninstall permanently removes owned skills (including edits), receipts, staging

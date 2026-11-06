@@ -17,7 +17,10 @@ A fresh session is optional; spec, plan and recorded evidence carry the context.
    Git status if available. Preserve unrelated changes. A manifest or project
    templates are not required. If legacy NDD files exist, follow the
    [existing-project guidance](../ndd-setup/references/project-state.md).
-   Resolve the feature/task id or supplied plan path unambiguously; explain
+   Resolve the feature with the shared
+   [prefix and identifier rules](../ndd-setup/references/feature-ids.md): `001`
+   uses the current user's confirmed prefix; a qualified id/full folder name/path
+   selects an explicit feature. Report the resolved path and task id; explain
    missing feature files or task ids without creating setup files.
    If the spec is already done, report it without editing unless the user
    requests a new revision through `ndd-spec`.

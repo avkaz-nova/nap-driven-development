@@ -7,17 +7,20 @@ disable-model-invocation: true
 
 # ndd-spec
 
-Create or revise `specs/NNN-feature-slug/spec.md`, or an explicitly requested
+Create or revise `specs/PREFIX-NNN-feature-slug/spec.md`, or an explicitly requested
 project-relative feature path. This phase may edit only that specification and
 create its containing folder. Read applicable project instructions in place;
 preserve unrelated work. Use the user's language. No project manifest is required.
 If a legacy manifest exists, follow the [existing-project guidance](../ndd-setup/references/project-state.md).
 
-1. Resolve the project and feature unambiguously. For a new feature, choose the
-   next unused number without overwriting another folder. Keep output inside
+1. Resolve the project and feature using the shared
+   [prefix and identifier rules](../ndd-setup/references/feature-ids.md).
+   For a new feature, require a confirmed prefix, choose its next unused number,
+   and set the spec's `id` to the full folder name and `owner` to the prefix.
+   Only setup may save prefix settings. Keep output inside
    the project and do not write through links. If `specs/` belongs to another
    workflow, ask for an explicit feature path. If the input is an
-   existing spec, keep its id and created date. Use the standard template at
+   existing spec, keep its id, owner and created date. Use the standard template at
    `../ndd-setup/assets/spec.md`, relative to this loaded skill's directory.
    Never look for or copy templates in the project. If the bundled template is
    missing, report an incomplete NDD installation and stop before writing.

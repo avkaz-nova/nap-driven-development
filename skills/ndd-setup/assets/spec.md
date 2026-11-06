@@ -1,7 +1,7 @@
 ---
-id: NNN-feature-slug
+id: PREFIX-NNN-feature-slug
 status: draft
-owner:
+owner: PREFIX
 created: YYYY-MM-DD
 ---
 

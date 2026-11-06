@@ -33,7 +33,15 @@ version, OS, scenario, before/after diff, observed result and any limitation.
 
 | Scenario | Setup / request | Required observation |
 |---|---|---|
-| Empty project | Invoke setup | Readiness report; no files created |
+| Empty Git project | Invoke setup and accept a prefix | Only local Git prefix saved; no tracked files created |
+| Proposed prefix | Set Git author name to Alexey Kazakov; no prefix yet | Explain proposed prefix and local storage; wait for acceptance/custom choice |
+| Custom prefix | Supply a valid alternative | Save that value only; read it back; no extra approval loop |
+| Invalid prefix | Supply spaces, punctuation, a path or multiple saved values | Explain invalid value; no silent coercion or overwrite |
+| Declined prefix | Decline the suggestion without choosing another | No config/files written; explain that new features need a confirmed prefix |
+| Missing Git identity | No author name configured | Ask for prefix; do not invent identity or read email/credentials |
+| No Git repository | Invoke setup | Offer session-only prefix; no Git initialization or fallback file |
+| Prefix save failure | Local config is not writable | Report unsaved choice; do not claim persistence |
+| Other computer | Fresh clone of a project with prefixed specs | Confirm own prefix again; do not infer ownership from a matching folder |
 | AGENTS only | Include a distinctive existing rule | Same bytes; no CLAUDE file or import created |
 | CLAUDE only | Include shared and Claude-only rules | Same bytes; no AGENTS file created |
 | Both files | Independent rules | Preserve both; report only actual conflicts |
@@ -41,11 +49,18 @@ version, OS, scenario, before/after diff, observed result and any limitation.
 | Compatible preference | Team requires docs under `docs/` | Suggest explicit output path, not instruction rewrite |
 | Other skills | Foreign `ndd-review` and another SDD tool | Neither removed nor automatically archived |
 | Scoped override | Nested rule contradicts intended workflow | Applicable conflict surfaced |
-| Read-only setup | Save full initial tree, invoke `ndd-setup` with no conflicts | Identical tree afterwards, including no backups |
-| Declined conflict edit | Reject proposed resolution | No writes; blocker remains reported |
+| Read-only repeat | Valid saved prefix; save full initial tree, invoke setup with no conflicts | Identical tree/config afterwards, including no backups |
+| Declined conflict edit | Saved prefix; reject proposed resolution | No writes; blocker remains reported |
 | Concurrent edit | Change instruction after exceptional preview | New diff/approval before replacement |
-| Repeat setup | Run readiness check again | No files or timestamp-only changes |
-| First spec | No manifest, no specs directory, no project templates | Create only feature folder and `spec.md` from bundled template |
+| Repeat setup | Saved prefix; Git author name changed | Reuse prefix without prompting or rewriting config |
+| First spec | Confirmed prefix, no manifest/specs/templates | Create only prefixed feature folder and `spec.md` from bundled template |
+| Missing prefix for new spec | No saved or session-confirmed choice | Ask for setup; no guessed prefix, settings write or partial spec |
+| Prefix-local numbering | `ak-001` and `iv-009` already exist | Next ak feature is `ak-002`; id equals folder, owner equals prefix |
+| Short id | Saved `ak`; both `ak-001` and `iv-001` exist | `plan/do 001` resolve ak; explicit `iv-001` resolves iv |
+| Missing own id | Saved `ak`; only `iv-001` or legacy `001` exists | Bare `001` does not silently choose either; request explicit id/path |
+| Colliding branches | Two `ak-001-*` folders become visible | Ask for exact path; no automatic rename/merge or arbitrary selection |
+| Prefix change | User approves a new prefix | Change local setting only; existing feature names, ids and owners preserved |
+| Legacy short id | No prefix; one unprefixed `001` and no prefixed matches | Resolve old feature without migration or new settings |
 | First plan | Approved spec, no project templates | Create adjacent `plan.md` from bundled template |
 | Source removed | Use copied installation after deleting download | Resolve templates beside installed skills |
 | Old custom template | Existing `specs/_templates` differs from standard | Leave it unchanged; use installed template |
@@ -81,6 +96,12 @@ Development validation on 2026-11-06 used macOS arm64 and Python 3.13:
 
 Both backends exercise all copy/rollback/digest cases. Bash also covers POSIX
 links, including uninstalling broken links without deleting source content.
+
+A disposable Git repository on macOS was also used to check the prefix commands:
+only the local `[ndd]` section was added, a fresh process read the saved value,
+and global config, project files and Git status stayed unchanged. A second
+repository had no local prefix. This checks Git storage, not the agent's prefix
+prompting, numbering or resolution behaviour; those scenario runs remain pending.
 
 The user reported a successful 0.2 installation on Windows, with retained backups
 (the latter is changed in 0.3). Native Windows verification of the new cleanup,

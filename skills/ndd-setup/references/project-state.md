@@ -1,10 +1,12 @@
 # Existing projects and output locations
 
 New NDD projects need no manifest, instruction block or project-local template.
-The default document location is `specs/NNN-feature-slug/{spec,plan}.md`, created
+The default document location is `specs/PREFIX-NNN-feature-slug/{spec,plan}.md`, created
 only when a specification is requested. All skills use the installed kit's
 `ndd-setup/assets` templates; the generated feature documents are independent of
 the templates afterwards. Updating NDD does not rewrite those documents.
+The confirmed personal prefix is a local Git setting, not a tracked project file;
+see [prefixes and feature identifiers](feature-ids.md).
 
 ## Projects created by 0.1 or 0.2
 
@@ -29,6 +31,10 @@ minimal removal/update only after approval rather than silently ignoring it.
 Old feature plans lacking approval/digest metadata require review through
 `ndd-plan` before implementation. Preserve their completed work; setup must not
 bulk-approve or rewrite specs/plans.
+
+Existing unprefixed feature folders from any earlier NDD installation keep their
+names and ids. Prefix selection does not migrate or rename them. Use their full
+folder name/path when a short number would be ambiguous.
 
 ## Other output locations
 

@@ -25,6 +25,12 @@ git clone https://github.com/avkaz/nap-driven-development.git
 cd nap-driven-development
 ```
 
+Optional: preview where NDD will be installed, without changing anything:
+
+```bash
+bash ./install.sh --all --dry-run
+```
+
 **3. Install the skills for both agents:**
 
 ```bash
@@ -48,6 +54,12 @@ git clone https://github.com/avkaz/nap-driven-development.git
 
 ```powershell
 cd nap-driven-development
+```
+
+Optional: preview where NDD will be installed, without changing anything:
+
+```powershell
+powershell -NoProfile -File .\install.ps1 -All -DryRun
 ```
 
 **3. Install the skills for both agents:**
@@ -83,16 +95,23 @@ the skill picker.
 
 | Step | Claude Code | Codex |
 |---|---|---|
-| Check the project | `/ndd-setup` | `$ndd-setup` |
+| Check project and choose prefix | `/ndd-setup` | `$ndd-setup` |
 | Describe a task | `/ndd-spec Fix CSV export` | `$ndd-spec Fix CSV export` |
 | Review the spec | Say “I approve this spec” when ready | Same |
 | Create a plan | `/ndd-plan 001` | `$ndd-plan 001` |
 | Review the plan | Say “I approve this plan” when ready | Same |
 | Implement the next task | `/ndd-do 001` | `$ndd-do 001` |
 
-Replace `001` with your feature's number. Repeat `ndd-do` to continue through the plan.
+Setup suggests a personal prefix from your Git name, such as `ak`. Accept it or
+choose your own. After your confirmation, it saves `ndd.prefix` in the existing
+local Git config — no separate project file, and nothing to commit. A new clone
+needs its own setup; use the same prefix on your other computer.
 
-**Setup normally changes nothing.** It checks readiness and reports conflicts.
+`ndd-plan 001` then means your `ak-001` feature. To select a teammate's feature,
+use its prefix, e.g. `ndd-plan iv-001`. Repeat `ndd-do` to continue through the plan.
+Choose different prefixes within the team; ambiguous matches always need clarification.
+
+**Setup preserves your project instructions.** It checks readiness and reports conflicts.
 Editing existing `AGENTS.md` / `CLAUDE.md` requires your approval of a specific fix.
 
 You write specs only for the tasks you choose. No need to document the whole
@@ -101,42 +120,13 @@ existing project. Templates stay with the installed skills; task documents live 
 ```text
 your-project/
 └── specs/
-    └── 001-fix-csv-export/
+    └── ak-001-fix-csv-export/
         ├── spec.md
         └── plan.md
 ```
 
 These are ordinary project files: commit them with the code if you want to share
 them. NDD does not commit or push anything automatically.
-
-## What does dry run mean?
-
-**“Show what would happen, without changing anything.”** It is optional.
-You do not need it before installing or using NDD.
-
-Add `--dry-run` on Mac or `-DryRun` on Windows to the installer command to preview
-an install or removal. Project setup uses plain `ndd-setup`, without flags.
-
-<details>
-<summary>Show an installation preview</summary>
-
-Run from the downloaded NDD folder. These commands **do not install** anything.
-
-**Mac:**
-
-```bash
-bash ./install.sh --all --dry-run
-```
-
-**Windows:**
-
-```powershell
-powershell -NoProfile -File .\install.ps1 -All -DryRun
-```
-
-To actually install, use step 3 in the installation instructions.
-
-</details>
 
 ## Update or uninstall
 
@@ -149,8 +139,23 @@ In your cloned NDD folder, download the latest changes:
 git pull --ff-only
 ```
 
-Then rerun **step 3** for your operating system and restart the agent.
-If you used a ZIP, download and extract a fresh copy instead, then run step 3.
+If you used a ZIP, download and extract a fresh copy instead of running `git pull`.
+
+Then install the updated skills from the NDD folder:
+
+**Mac:**
+
+```bash
+bash ./install.sh --all
+```
+
+**Windows:**
+
+```powershell
+powershell -NoProfile -File .\install.ps1 -All
+```
+
+Restart the agent after updating.
 Existing project specs and plans stay unchanged.
 
 </details>
@@ -165,17 +170,31 @@ Project files, unrelated skills and the downloaded NDD folder are preserved.
 
 **Mac:**
 
+Optional: preview what will be removed, without deleting anything:
+
+```bash
+bash ./install.sh --all --uninstall --dry-run
+```
+
+Remove NDD:
+
 ```bash
 bash ./install.sh --all --uninstall
 ```
 
 **Windows:**
 
+Optional: preview what will be removed, without deleting anything:
+
+```powershell
+powershell -NoProfile -File .\install.ps1 -All -Uninstall -DryRun
+```
+
+Remove NDD:
+
 ```powershell
 powershell -NoProfile -File .\install.ps1 -All -Uninstall
 ```
-
-To preview removal first, add `--dry-run` / `-DryRun` to the uninstall command.
 
 </details>
 

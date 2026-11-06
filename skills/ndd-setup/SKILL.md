@@ -1,14 +1,15 @@
 ---
 name: ndd-setup
-description: Check whether the current project can use NDD without changing its instructions or copying templates. Invoke explicitly with ndd-setup; report readiness and conflicts, and get approval before any exceptional edit.
+description: Check project readiness for NDD and confirm a personal feature prefix saved in local Git config. Invoke explicitly with ndd-setup; preserve existing instructions and get approval before saving a prefix or resolving a blocking conflict.
 disable-model-invocation: true
 ---
 
 # ndd-setup
 
-Check readiness for the explicitly invoked NDD workflow. Normal setup is read-only:
-no instruction blocks, imports, project templates, manifest or empty specs folder.
-The first `ndd-spec` invocation creates the task documents when needed.
+Check readiness for the explicitly invoked NDD workflow and confirm a personal
+feature prefix. Inspection is read-only; after confirmation, save only the prefix
+in local Git config. Do not create instruction blocks, imports, project templates,
+a manifest or an empty specs folder. The first `ndd-spec` creates task documents.
 Invoke `ndd-setup` without flags.
 
 This skill contains `VERSION` and the standard `assets/spec.md` and `assets/plan.md`.
@@ -39,10 +40,18 @@ project templates. If resources are missing, report the incomplete installation.
    read [existing-project guidance](references/project-state.md) if a legacy
    manifest, instruction block or copied template is found. Preserve those files.
 
+## Choose a personal prefix
+
+Follow [prefix selection and feature identifiers](references/feature-ids.md).
+Read the saved local `ndd.prefix`; if absent, suggest a prefix from the Git author
+name. Explain its purpose, show the exact value and local storage, and let the user
+accept or choose their own. Save only their confirmed choice. An existing valid
+choice is reused without another prompt or write.
+
 ## Resolve actual conflicts
 
 Distinguish blocking contradictions from optional preferences. If the project's
-rules allow the NDD workflow, nothing needs to be edited. An existing stack,
+rules allow the NDD workflow, its instructions need no edits. An existing stack,
 formatter, testing framework or another SDD tool is not automatically a conflict.
 NDD must respect project rules; its installation does not override them.
 
@@ -62,13 +71,15 @@ personal global reminder is required.
 State:
 - whether NDD is ready, blocked, or partially unverified;
 - which installed templates and output location will be used;
+- the confirmed prefix and whether it was saved locally, reused or is session-only;
 - any actual conflict and unresolved checks;
-- that a normal setup wrote no files;
+- exact changes, or that nothing was written if no prefix or conflict edit was saved;
 - the next invocation: `/ndd-spec <idea>` or `$ndd-spec <idea>`.
 
 A readiness report is not approval of a future spec or plan. Skills perform the
 workflow when explicitly invoked; normal coding requests need not use NDD.
-Repeated setup should remain a read-only check. Never commit or install globally.
+Repeated setup with an unchanged prefix should remain read-only. Never commit or
+install globally.
 
 When a diagram helps explain a conflict or workflow, use the
 [rounded Unicode diagram style](references/diagrams.md). Skip diagrams that add no value.

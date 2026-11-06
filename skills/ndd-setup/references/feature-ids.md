@@ -1,0 +1,88 @@
+# Prefixes and feature identifiers
+
+New feature folders use `PREFIX-NNN-feature-slug`, for example
+`ak-001-fix-csv-export`. The full folder name is the spec's `id`; set its `owner`
+to the confirmed prefix. Numbers start at `001` and advance separately for each
+prefix. The prefix identifies a naming namespace, not an authenticated identity.
+
+## Choose and remember a prefix
+
+Setup runs these commands in the project, never in the NDD source checkout:
+
+- Read only the repository-local value: `git config --local --no-includes --get-all ndd.prefix`.
+  Exit status 1 with no value means unset. Report other errors; do not silently
+  treat unreadable or malformed configuration as missing.
+- A valid prefix is 2–16 lowercase ASCII letters or digits, starting with a letter.
+  It contains no spaces, punctuation or path separators. For an invalid value or
+  multiple values, show the issue and propose an explicitly approved correction.
+- Reuse a single valid saved prefix. Do not ask again or rewrite it merely because
+  the Git author name changed. A requested prefix change affects new features only.
+- When unset, read `git config --get user.name` and suggest a short prefix such as
+  `ak` for Alexey Kazakov. This is a suggestion, not proof of a GitHub login. If
+  the name is unavailable or cannot produce a useful prefix, ask for one; do not
+  read email addresses, credentials or OS account details to fill the gap.
+- Explain that the prefix separates teammates' feature numbers, appears in shared
+  document paths and can be changed by the user before saving. Show any visible
+  matching feature folders and ask whether this is their own prefix or belongs
+  to a teammate. Do not automatically claim another person's namespace.
+- Show the exact value and that it will be saved only in the existing local Git
+  configuration. Ask the user to accept or supply a different value. Validate and
+  save their explicit choice; no second confirmation is needed for a valid custom
+  value when this storage behaviour was already explained.
+- Save using `git config --local ndd.prefix ak` (substitute the validated choice),
+  then read it back. Re-read before writing; if the value changed concurrently,
+  reconcile with the user. Do not rewrite the whole config, alter `user.name`,
+  change global Git settings or create a tracked config file. If saving fails,
+  report it; never claim that the next session will remember an unsaved value.
+
+The key lives in the clone's existing Git config, normally `.git/config`. It is
+shared by both agents in that clone and by linked worktrees, but is not committed
+or pushed. A new clone/computer needs its own confirmation; recommend the same
+prefix for the same person. Neither installation nor uninstall edits Git config.
+
+Outside a Git repository, explain that the choice can only last for the current
+conversation. Offer to use a confirmed prefix for that session; do not initialize
+Git or create a fallback settings file. A declined choice produces no writes.
+
+## Create a feature
+
+`ndd-spec` reads the saved prefix, or uses one explicitly confirmed for this
+project in the current conversation. If neither exists, ask the user to run
+`ndd-setup`; do not guess a prefix or save settings from the spec phase.
+
+Inspect the applicable specs directory. Choose one greater than the largest
+visible number for that prefix (minimum three digits). Check the whole
+`PREFIX-NNN` identifier, not just the proposed slug: `ak-001-one` and `ak-001-two`
+must not be created as separate new tasks when either is already visible.
+Recheck before creation and never overwrite another spec. Use the prefixed name
+also for a new feature in an explicitly requested output directory. Do not rename
+existing features or change their ids/owners when revising them.
+
+Prefixes reduce collisions between teammates; they cannot reserve numbers across
+unseen branches or clones. Two people using the same prefix, or one person working
+in parallel, can still collide. Report visible duplicate identifiers. Resolving
+an existing duplicate requires an explicitly approved rename and reference review;
+never silently renumber tasks, merge their documents or choose one by slug order.
+
+## Resolve a feature for plan/do
+
+Read these rules before resolving an id. Use the project's default/legacy specs
+location or an explicit safe project-relative path. Do not search unrelated roots.
+
+1. A path to the required document, or an exact full folder name such as
+   `ak-001-fix-csv-export`, selects that feature directly. No personal prefix is
+   needed to work on a teammate's feature.
+2. A qualified id such as `ak-001` selects matching prefixed feature folders.
+   Require exactly one match; otherwise list candidates and ask for the full path.
+3. A bare number such as `001` uses the current confirmed/saved prefix: for `ak`,
+   resolve `ak-001`. With zero matches, report that result; do not fall back to
+   another person's feature or an unprefixed legacy feature with the same number.
+4. With no confirmed prefix, a bare number may resolve a single unprefixed legacy
+   feature (`001-old-feature`) only when there are no prefixed matches for that
+   number. Otherwise ask for a qualified id/path or setup. Do not infer the current
+   user from whichever folder happens to match.
+
+Validate saved settings on read, but only setup may change them. Report invalid
+or ambiguous settings and allow an explicit feature id/path to avoid guessing.
+Show the resolved feature path before planning or implementation. Preserve all
+existing approval, spec-digest and task verification gates.

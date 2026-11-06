@@ -4,8 +4,16 @@ NDD uses `spec.md` and `plan.md` per feature. The spec describes agreed behaviou
 the plan describes implementation and stores progress and verification evidence.
 No manifest, instruction-file changes or project template folder is required.
 `ndd-spec` and `ndd-plan` use the standard templates bundled with `ndd-setup`.
-Normal setup is an optional read-only readiness check. For older project locations,
-see [existing-project guidance](../skills/ndd-setup/references/project-state.md).
+Setup checks readiness and confirms a prefix stored only in local Git config.
+New specifications need a confirmed prefix; revising existing documents does not
+require renaming them or creating settings. For older project locations, see
+[existing-project guidance](../skills/ndd-setup/references/project-state.md).
+
+New ids use `PREFIX-NNN-feature-slug`. A short command such as `ndd-plan 001`
+resolves within the current user's prefix. Qualified ids (`ak-001`), full folder
+names and explicit document paths can select other features. Ambiguous matches
+must be clarified; never pick by directory order. See the shared
+[prefix and identifier rules](../skills/ndd-setup/references/feature-ids.md).
 
 | Operation | Required state | Result |
 |---|---|---|

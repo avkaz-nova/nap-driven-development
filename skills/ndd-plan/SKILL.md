@@ -10,8 +10,11 @@ disable-model-invocation: true
 Edit only the feature's `plan.md`. Read applicable project instructions and the
 feature's spec. No manifest or copied project templates are required. If legacy
 NDD files exist, follow the [existing-project guidance](../ndd-setup/references/project-state.md).
-Resolve ids/paths without guessing when several match. Use the user's language
-and the project's existing tools.
+Resolve the feature with the shared
+[prefix and identifier rules](../ndd-setup/references/feature-ids.md): `001` uses
+the current user's confirmed prefix; `ak-001` or a full folder name/path selects
+an explicit feature. Report the resolved path; never guess between matches.
+Use the user's language and the project's existing tools.
 
 1. Require spec status `approved` or `in-progress`, and no unresolved
    `[NEEDS CLARIFICATION]`. `in-progress` supports revising an implementation
