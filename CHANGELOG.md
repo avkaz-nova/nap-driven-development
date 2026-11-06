@@ -2,6 +2,11 @@
 
 ## 0.3.0 — unreleased
 
+- Setup records project/common-Git-directory, key and prefix in `~/.ndd/projects`.
+  Full uninstall clears registered, unchanged local prefixes before removing NDD;
+  unresolved records are kept with warnings while removal continues. Single-agent uninstall preserves
+  the shared registry. Dry-run previews cleanup without writes.
+
 - Setup checks readiness without creating instruction blocks, imports, manifests,
   project templates or empty specs directories.
 - Setup proposes a personal prefix and saves the confirmed choice in local Git
@@ -12,7 +17,10 @@
 - Removed the redundant setup dry-run option; installer dry-run remains available.
 - Spec and plan use only bundled templates; legacy project files are preserved.
 - Uninstall permanently removes owned skills (including edits), receipts, staging
-  files and all old backups. Project files and source checkouts remain untouched.
+  files and all old backups. With both agents selected, it also removes the verified
+  clean official NDD clone containing the installer. Local work, unpublished history,
+  linked worktrees and unverified sources are retained; `--keep-source` / `-KeepSource`
+  explicitly preserves the clone. Your project files remain untouched.
 - Shared rounded Unicode diagram guidance for all four skills.
 - Regression coverage for clean removal, old leftover state, nested links, dry-run
   and interrupted deletion. Install/update backup and rollback are unchanged.

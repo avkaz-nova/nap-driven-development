@@ -1,77 +1,48 @@
-# Workflow contract
+# Workflow and approvals
 
-NDD uses `spec.md` and `plan.md` per feature. The spec describes agreed behaviour;
-the plan describes implementation and stores progress and verification evidence.
-No manifest, instruction-file changes or project template folder is required.
-`ndd-spec` and `ndd-plan` use the standard templates bundled with `ndd-setup`.
-Setup checks readiness and confirms a prefix stored only in local Git config.
-New specifications need a confirmed prefix; revising existing documents does not
-require renaming them or creating settings. For older project locations, see
-[existing-project guidance](../skills/ndd-setup/references/project-state.md).
+Each feature has two files: `spec.md` describes the agreed behaviour;
+`plan.md` contains implementation tasks, progress and verification results.
 
-New ids use `PREFIX-NNN-feature-slug`. A short command such as `ndd-plan 001`
-resolves within the current user's prefix. Qualified ids (`ak-001`), full folder
-names and explicit document paths can select other features. Ambiguous matches
-must be clarified; never pick by directory order. See the shared
-[prefix and identifier rules](../skills/ndd-setup/references/feature-ids.md).
+| Step | What happens |
+|---|---|
+| `ndd-spec <idea>` | Write or revise the spec and resolve open questions |
+| Approve the spec | Confirm the current requirements in chat |
+| `ndd-plan <id>` | Create a technical plan with tasks and checks |
+| Approve the plan | Confirm the current approach and task scope in chat |
+| `ndd-do <id>` | Implement and verify the next task; repeat to continue |
 
-| Operation | Required state | Result |
-|---|---|---|
-| Write/revise spec | User requests specification work | `draft` or `clarifying` |
-| Approve spec | Explicit approval of current content, no material unknowns | `approved` |
-| Create/revise plan | Spec `approved` or unchanged `in-progress` | Plan `draft`, current spec digest |
-| Approve plan | Explicit approval of current approach/tasks | Plan `approved` |
-| Implement | Spec `approved`/`in-progress`, approved current plan | Task evidence, spec `in-progress` |
-| Complete | All tasks and all final AC/project checks verified | Spec `done` |
+Use `/` before commands in Claude Code and `$` in Codex. A short id such as `001`
+uses your [setup prefix](setup.md#your-prefix); a qualified id or full path selects
+an explicit feature.
 
-Chat approval is sufficient: the agent records it. Calling the next command alone
-does not retroactively approve a draft. An implementation request that explicitly
-approves the displayed plan can be recorded without another permission exchange.
+The agent records your approval in the documents. Calling the next command alone
+does not approve a draft. An explicit “approve this plan and implement it” can
+cover both actions without another confirmation.
 
-## Change management
+## When requirements change
 
-All behavioural content belongs in the Markdown body of the spec. The plan stores
-`spec_digest`, computed by the helper shipped with `ndd-plan`. The helper excludes
-YAML frontmatter, removes an initial UTF-8 BOM, normalizes CRLF to LF and removes
-trailing blank lines, then hashes the body with one final LF. Lifecycle metadata
-and host line endings don't invalidate the plan. Editorial body edits do; a brief
-review is preferable to trying to infer semantic equality.
+The plan stores a checksum of the spec body. If that body changes, implementation
+stops for review and an updated plan. Status changes and line-ending differences
+do not invalidate it; edits to the body do, including wording changes.
 
-Changing requirements returns the spec to draft/clarifying. After approval,
-re-plan affected work. Preserve valid completed tasks; reopen invalidated ones
-with an explanation. Never reset all progress merely because the digest changed.
-Legacy plans without status/digest metadata require review, not automatic approval.
+Changed requirements need spec approval again. Revise the affected tasks while
+keeping completed work and evidence that remain valid. Changes to the approach
+or scope need plan approval; small implementation decisions within approved scope
+can be recorded in the plan.
 
-A checksum catches stale documents, not malicious editing or falsified approval.
-The user and agent still review the content. If the helper fails, implementation
-stops instead of guessing or updating the stored digest to bypass the check.
+If the code violates the agreed spec, fix the bug. Do not change the spec simply
+to make it match the bug.
 
-If code disagrees with the spec, determine whether it is an implementation bug
-or a requested behaviour change. Fix bugs against the agreed behaviour; do not
-rewrite the spec just to match a bug. Behaviour changes require spec review.
-Small implementation decisions within approved scope go in the plan's Decisions;
-changes to the approach or scope require plan review.
+## Verification and continuing work
 
-## Verification and handoff
+Each acceptance criterion needs a task and a final check. Checks can be tests,
+builds or a recorded manual observation, depending on the change. Failed or missing
+checks leave the task incomplete. The feature is marked `done` only after all
+acceptance criteria, required project checks and the final diff are verified.
 
-Every requirement and promised edge case has an AC. Each AC maps to a task and a
-final check of the assembled feature. A check may be an automated test, a build,
-a safe validation query or an explicit human observation. A task isn't complete
-when its required checks are unavailable or failing.
+`ndd-do` handles one task by default; you can request several. Continue in another
+session or agent using the same spec, plan and recorded results. No fresh session
+is required. Commit, push, deployment and production actions need separate authorization.
 
-Record commands/observations, results and limitations in the plan, without raw
-private data. Keep later business hypotheses separate from release acceptance.
-Before `done`, verify every AC, required project checks and the final diff.
-
-One task per invocation is the default; the user can request several. A fresh
-session is optional. Continue in the other agent by reading the same documents
-and checking the same gates. Commit spec/plan updates with code when the user
-chooses to commit; NDD itself does not authorize external actions.
-
-## Diagrams
-
-When useful for understanding behaviour, architecture or a workflow, use editable
-Unicode text diagrams with rounded boxes and aligned arrows. Keep branching,
-merging and return paths explicit. The four skills share the
-[diagram style reference](../skills/ndd-setup/references/diagrams.md). User-requested
-formats take precedence; a diagram is optional and does not replace written ACs.
+See the [CSV export example](../examples/002-csv-export/spec.md) and its
+[plan](../examples/002-csv-export/plan.md).

@@ -7,8 +7,8 @@ disable-model-invocation: true
 # ndd-setup
 
 Check readiness for the explicitly invoked NDD workflow and confirm a personal
-feature prefix. Inspection is read-only; after confirmation, save only the prefix
-in local Git config. Do not create instruction blocks, imports, project templates,
+feature prefix. Inspection is read-only; after confirmation, save the prefix
+in local Git config and register the project in the shared NDD registry. Do not create instruction blocks, imports, project templates,
 a manifest or an empty specs folder. The first `ndd-spec` creates task documents.
 Invoke `ndd-setup` without flags.
 
@@ -45,8 +45,11 @@ project templates. If resources are missing, report the incomplete installation.
 Follow [prefix selection and feature identifiers](references/feature-ids.md).
 Read the saved local `ndd.prefix`; if absent, suggest a prefix from the Git author
 name. Explain its purpose, show the exact value and local storage, and let the user
-accept or choose their own. Save only their confirmed choice. An existing valid
-choice is reused without another prompt or write.
+accept or choose their own. Explain that setup also records the project and
+prefix in `~/.ndd/projects` for cleanup during full uninstall. Save only their
+confirmed choice, then use the bundled registry helper as described in the prefix
+reference. Reuse an existing valid choice without rewriting Git config, and
+register it if missing. Report registration failures as incomplete setup.
 
 ## Resolve actual conflicts
 
@@ -73,13 +76,13 @@ State:
 - which installed templates and output location will be used;
 - the confirmed prefix and whether it was saved locally, reused or is session-only;
 - any actual conflict and unresolved checks;
-- exact changes, or that nothing was written if no prefix or conflict edit was saved;
+- exact changes, including registry status, or that nothing was written;
 - the next invocation: `/ndd-spec <idea>` or `$ndd-spec <idea>`.
 
 A readiness report is not approval of a future spec or plan. Skills perform the
 workflow when explicitly invoked; normal coding requests need not use NDD.
-Repeated setup with an unchanged prefix should remain read-only. Never commit or
-install globally.
+Repeated setup with an unchanged prefix and existing registry record must not
+rewrite config or the record. Never commit or install globally.
 
 When a diagram helps explain a conflict or workflow, use the
 [rounded Unicode diagram style](references/diagrams.md). Skip diagrams that add no value.

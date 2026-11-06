@@ -11,6 +11,9 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
+
+from process_environment import child_environment
 
 REPO = Path(__file__).resolve().parents[1]
 NAMES = ('ndd-setup', 'ndd-spec', 'ndd-plan', 'ndd-do')
@@ -42,6 +45,8 @@ class InstallerTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory(prefix='ndd-test-')
         self.root = Path(self.temporary.name).resolve()
         self.addCleanup(self.temporary.cleanup)
+        self.registry_state = self.root / 'ndd-state'
+        self.enterContext(patch.dict(os.environ, NDD_STATE_DIR=str(self.registry_state)))
         self.distribution = self.root / 'kit space Кириллица'
         self.distribution.mkdir()
         shutil.copytree(REPO / 'skills', self.distribution / 'skills')
@@ -52,10 +57,12 @@ class InstallerTests(unittest.TestCase):
         self.state = Path(str(self.target) + '.ndd-kit')
 
     def run_installer(self, *options: str, success: bool = True,
-                      environment: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
+                      environment: dict[str, str] | None = None,
+                      working_directory: Path | None = None) -> subprocess.CompletedProcess[str]:
         if POWERSHELL:
             mapping = {'--dry-run': '-DryRun', '--replace': '-Replace', '--link': '-Link',
-                       '--uninstall': '-Uninstall', '--codex-dir': '-CodexDir'}
+                       '--uninstall': '-Uninstall', '--codex-dir': '-CodexDir',
+                       '--keep-source': '-KeepSource'}
             command = [os.environ.get('NDD_TEST_POWERSHELL', 'powershell'), '-NoProfile',
                        '-ExecutionPolicy', 'Bypass', '-File', str(self.distribution / 'install.ps1'),
                        '-ClaudeDir', str(self.target), *[mapping.get(x, x) for x in options]]
@@ -63,12 +70,270 @@ class InstallerTests(unittest.TestCase):
             command = ['/bin/bash', str(self.distribution / 'install.sh'),
                        '--claude-dir', str(self.target), *options]
         result = subprocess.run(command, text=True, errors='replace', stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                env=environment, timeout=60)
+                                env=child_environment(command[0], environment),
+                                cwd=working_directory, timeout=60)
         if success:
             self.assertEqual(result.returncode, 0, result.stdout)
         else:
             self.assertNotEqual(result.returncode, 0, result.stdout)
         return result
+
+    def source_git(self, *args: str) -> str:
+        # Synthetic history only, with no real user identity/config/hooks or network.
+        environment = {key: value for key, value in os.environ.items() if not key.startswith('GIT_')}
+        environment.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM='1',
+                           GIT_AUTHOR_NAME='NDD Test', GIT_AUTHOR_EMAIL='ndd@example.invalid',
+                           GIT_COMMITTER_NAME='NDD Test', GIT_COMMITTER_EMAIL='ndd@example.invalid')
+        result = subprocess.run(['git', '-C', str(self.distribution), *args], env=environment,
+                                capture_output=True, text=True, errors='replace', timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return result.stdout.strip()
+
+    def prepare_source_clone(self) -> None:
+        self.source_git('init', '--quiet', '--template=')
+        self.source_git('config', '--local', 'core.autocrlf', 'false')
+        self.source_git('add', '.')
+        self.source_git('commit', '--quiet', '-m', 'Synthetic NDD distribution')
+        self.source_git('remote', 'add', 'origin', 'https://github.com/avkaz/nap-driven-development.git')
+        self.source_git('update-ref', 'refs/remotes/origin/main', 'HEAD')
+
+    def test_all_uninstall_removes_clean_source_clone(self) -> None:
+        self.prepare_source_clone()
+        self.run_installer('--codex-dir', str(self.other))
+        project = self.root / 'work-project'
+        project.mkdir()
+        (project / 'spec.md').write_text('keep project documents')
+        result = self.run_installer('--uninstall', '--codex-dir', str(self.other),
+                                    working_directory=self.distribution)
+        self.assertIn('Removed source clone:', result.stdout)
+        self.assertFalse(self.distribution.exists())
+        for target in (self.target, self.other):
+            self.assertFalse(Path(str(target) + '.ndd-kit').exists())
+            self.assertEqual(list(target.iterdir()), [])
+        self.assertEqual((project / 'spec.md').read_text(), 'keep project documents')
+
+    def test_clean_clone_without_remaining_install_state_is_removed(self) -> None:
+        self.prepare_source_clone()
+        self.run_installer('--uninstall', '--codex-dir', str(self.other))
+        self.assertFalse(self.distribution.exists())
+
+    @unittest.skipIf(POWERSHELL and not WINDOWS, 'Directory junctions require Windows')
+    def test_all_link_uninstall_also_removes_clean_source(self) -> None:
+        self.prepare_source_clone()
+        self.run_installer('--link', '--codex-dir', str(self.other))
+        self.run_installer('--uninstall', '--codex-dir', str(self.other))
+        self.assertFalse(self.distribution.exists())
+        for target in (self.target, self.other):
+            self.assertEqual(list(target.iterdir()), [])
+            self.assertFalse(Path(str(target) + '.ndd-kit').exists())
+
+    def test_source_cleanup_dry_run_is_read_only(self) -> None:
+        self.prepare_source_clone()
+        self.run_installer('--codex-dir', str(self.other))
+        before = snapshot(self.root)
+        result = self.run_installer('--uninstall', '--codex-dir', str(self.other), '--dry-run')
+        self.assertIn('Permanently remove source clone after uninstall:', result.stdout)
+        self.assertEqual(snapshot(self.root), before)
+
+    def test_keep_source_preserves_clean_clone(self) -> None:
+        self.prepare_source_clone()
+        self.run_installer('--codex-dir', str(self.other))
+        before = snapshot(self.distribution)
+        self.run_installer('--uninstall', '--codex-dir', str(self.other), '--keep-source')
+        self.assertEqual(snapshot(self.distribution), before)
+        self.assertFalse(self.state.exists())
+
+    def test_keep_source_requires_uninstall(self) -> None:
+        before = snapshot(self.root)
+        self.run_installer('--keep-source', success=False)
+        self.assertEqual(snapshot(self.root), before)
+
+    def test_one_agent_uninstall_keeps_clone(self) -> None:
+        self.prepare_source_clone()
+        self.run_installer('--codex-dir', str(self.other))
+        before = snapshot(self.distribution)
+        self.run_installer('--uninstall')
+        self.assertEqual(snapshot(self.distribution), before)
+        self.assertTrue((self.other / 'ndd-setup/SKILL.md').is_file())
+
+    def test_uninstall_keeps_local_source_changes(self) -> None:
+        self.prepare_source_clone()
+        self.run_installer('--codex-dir', str(self.other))
+        file = self.distribution / 'skills/ndd-spec/SKILL.md'
+        file.write_bytes(file.read_bytes() + b'\nLocal source work.\n')
+        before = snapshot(self.distribution)
+        result = self.run_installer('--uninstall', '--codex-dir', str(self.other))
+        self.assertIn('clone contains local changes', result.stdout)
+        self.assertEqual(snapshot(self.distribution), before)
+        self.assertFalse(self.state.exists())
+
+    def test_uninstall_keeps_untracked_and_ignored_source_files(self) -> None:
+        self.prepare_source_clone()
+        for ignored in (False, True):
+            with self.subTest(ignored=ignored):
+                note = self.distribution / 'personal-note.txt'
+                note.write_text('keep even when ignored')
+                if ignored:
+                    exclude = self.distribution / '.git/info/exclude'
+                    exclude.parent.mkdir(exist_ok=True)
+                    exclude.write_text('personal-note.txt\n')
+                self.run_installer('--codex-dir', str(self.other))
+                before = snapshot(self.distribution)
+                self.run_installer('--uninstall', '--codex-dir', str(self.other))
+                self.assertEqual(snapshot(self.distribution), before)
+                note.unlink()
+
+    def test_uninstall_keeps_unpublished_source_history(self) -> None:
+        self.prepare_source_clone()
+        note = self.distribution / 'committed-work.txt'
+        note.write_text('unpublished work')
+        self.source_git('add', '.')
+        self.source_git('commit', '--quiet', '-m', 'Local work')
+        self.run_installer('--codex-dir', str(self.other))
+        before = snapshot(self.distribution)
+        result = self.run_installer('--uninstall', '--codex-dir', str(self.other))
+        self.assertIn('history not present', result.stdout)
+        self.assertEqual(snapshot(self.distribution), before)
+
+    def test_uninstall_keeps_source_with_hidden_index_changes(self) -> None:
+        self.prepare_source_clone()
+        file = self.distribution / 'install.sh'
+        original = file.read_bytes()
+        for flag in ('assume-unchanged', 'skip-worktree'):
+            with self.subTest(flag=flag):
+                self.source_git('update-index', '--' + flag, 'install.sh')
+                file.write_bytes(original + b'\n# Hidden local work\n')
+                self.run_installer('--codex-dir', str(self.other))
+                before = snapshot(self.distribution)
+                result = self.run_installer('--uninstall', '--codex-dir', str(self.other))
+                self.assertIn('source index can hide changes', result.stdout)
+                self.assertEqual(snapshot(self.distribution), before)
+                self.source_git('update-index', '--no-' + flag, 'install.sh')
+                file.write_bytes(original)
+
+    def test_uninstall_keeps_stashed_source_work(self) -> None:
+        self.prepare_source_clone()
+        file = self.distribution / 'install.sh'
+        file.write_bytes(file.read_bytes() + b'\n# Stashed source work\n')
+        self.source_git('stash', 'push', '--quiet')
+        self.run_installer('--codex-dir', str(self.other))
+        before = snapshot(self.distribution)
+        self.run_installer('--uninstall', '--codex-dir', str(self.other))
+        self.assertEqual(snapshot(self.distribution), before)
+
+    def test_uninstall_keeps_unrelated_repository(self) -> None:
+        self.prepare_source_clone()
+        self.source_git('remote', 'set-url', 'origin', 'https://example.invalid/team/project.git')
+        self.run_installer('--codex-dir', str(self.other))
+        before = snapshot(self.distribution)
+        result = self.run_installer('--uninstall', '--codex-dir', str(self.other))
+        self.assertIn('origin is not the NDD repository', result.stdout)
+        self.assertEqual(snapshot(self.distribution), before)
+
+    def test_uninstall_keeps_clone_with_linked_worktree(self) -> None:
+        self.prepare_source_clone()
+        worktree = self.root / 'linked-worktree'
+        self.source_git('worktree', 'add', '--quiet', '--detach', str(worktree), 'HEAD')
+        self.run_installer('--codex-dir', str(self.other))
+        before_source = snapshot(self.distribution)
+        before_worktree = snapshot(worktree)
+        self.run_installer('--uninstall', '--codex-dir', str(self.other))
+        self.assertEqual(snapshot(self.distribution), before_source)
+        self.assertEqual(snapshot(worktree), before_worktree)
+
+    def test_uninstall_from_linked_worktree_keeps_source(self) -> None:
+        self.prepare_source_clone()
+        original = self.distribution
+        worktree = self.root / 'linked-worktree'
+        self.source_git('worktree', 'add', '--quiet', '--detach', str(worktree), 'HEAD')
+        self.distribution = worktree
+        self.run_installer('--codex-dir', str(self.other))
+        before_source = snapshot(original)
+        before_worktree = snapshot(worktree)
+        self.run_installer('--uninstall', '--codex-dir', str(self.other))
+        self.assertEqual(snapshot(original), before_source)
+        self.assertEqual(snapshot(worktree), before_worktree)
+
+    def test_blocked_uninstall_never_removes_source_clone(self) -> None:
+        self.prepare_source_clone()
+        self.run_installer('--codex-dir', str(self.other))
+        lock = self.state / 'lock'
+        if POWERSHELL:
+            lock.write_text('active')
+        else:
+            lock.mkdir()
+        before = snapshot(self.root)
+        self.run_installer('--uninstall', '--codex-dir', str(self.other), success=False)
+        self.assertEqual(snapshot(self.root), before)
+
+    @unittest.skipIf(POWERSHELL, 'POSIX rm injection')
+    def test_source_changed_during_uninstall_is_retained(self) -> None:
+        self.prepare_source_clone()
+        self.run_installer('--codex-dir', str(self.other))
+        bin_dir = self.root / 'fake-bin'
+        bin_dir.mkdir()
+        wrapper = bin_dir / 'rm'
+        wrapper.write_text('''#!/bin/bash
+case "${@: -1}" in */skills/ndd-setup) printf 'concurrent work' > "$NDD_TEST_SOURCE/concurrent.txt";; esac
+exec /bin/rm "$@"
+''')
+        wrapper.chmod(0o755)
+        environment = dict(os.environ, PATH=str(bin_dir) + os.pathsep + os.environ['PATH'],
+                           NDD_TEST_SOURCE=str(self.distribution))
+        result = self.run_installer('--uninstall', '--codex-dir', str(self.other), environment=environment)
+        self.assertIn('Source retained:', result.stdout)
+        self.assertEqual((self.distribution / 'concurrent.txt').read_text(), 'concurrent work')
+        self.assertFalse(self.state.exists())
+
+    @unittest.skipIf(POWERSHELL, 'POSIX source deletion failure injection')
+    def test_source_removal_failure_is_reported_and_can_be_retried(self) -> None:
+        self.prepare_source_clone()
+        self.run_installer('--codex-dir', str(self.other))
+        bin_dir = self.root / 'fake-bin'
+        bin_dir.mkdir()
+        wrapper = bin_dir / 'rm'
+        wrapper.write_text('''#!/bin/bash
+if [[ "${@: -1}" == "$NDD_TEST_SOURCE" ]]; then echo 'injected source deletion failure' >&2; exit 9; fi
+exec /bin/rm "$@"
+''')
+        wrapper.chmod(0o755)
+        environment = dict(os.environ, PATH=str(bin_dir) + os.pathsep + os.environ['PATH'],
+                           NDD_TEST_SOURCE=str(self.distribution))
+        result = self.run_installer('--uninstall', '--codex-dir', str(self.other), success=False,
+                                    environment=environment)
+        self.assertIn('Uninstall incomplete', result.stdout)
+        self.assertIn('injected source deletion failure', result.stdout)
+        self.assertTrue(self.distribution.is_dir())
+        self.assertFalse(self.state.exists())
+        self.run_installer('--uninstall', '--codex-dir', str(self.other))
+        self.assertFalse(self.distribution.exists())
+
+    @unittest.skipUnless(POWERSHELL, 'PowerShell source deletion failure injection')
+    def test_powershell_source_removal_failure_is_reported_and_retried(self) -> None:
+        self.prepare_source_clone()
+        self.run_installer('--codex-dir', str(self.other))
+        driver = self.root / 'fail-source-delete.ps1'
+        driver.write_text('''param([string]$Installer, [string]$Target, [string]$Other)
+function Remove-Item {
+    param([string]$LiteralPath, [switch]$Force, [switch]$Recurse)
+    if ($LiteralPath -like '*kit space*') { throw 'injected source deletion failure' }
+    Microsoft.PowerShell.Management\\Remove-Item @PSBoundParameters
+}
+& $Installer -ClaudeDir $Target -CodexDir $Other -Uninstall
+''')
+        result = subprocess.run([os.environ.get('NDD_TEST_POWERSHELL', 'powershell'),
+                                 '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', str(driver),
+                                 '-Installer', str(self.distribution / 'install.ps1'),
+                                 '-Target', str(self.target), '-Other', str(self.other)],
+                                capture_output=True, text=True, errors='replace', timeout=60,
+                                env=child_environment(os.environ.get('NDD_TEST_POWERSHELL', 'powershell')))
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Uninstall incomplete', result.stdout)
+        self.assertIn('injected source deletion failure', result.stderr)
+        self.assertTrue(self.distribution.is_dir())
+        self.assertFalse(self.state.exists())
+        self.run_installer('--uninstall', '--codex-dir', str(self.other))
+        self.assertFalse(self.distribution.exists())
 
     def test_copy_install_and_reinstall(self) -> None:
         source_before = snapshot(self.distribution)
@@ -229,7 +494,8 @@ function Copy-Item {
         result = subprocess.run([os.environ.get('NDD_TEST_POWERSHELL', 'powershell'),
                                  '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', str(driver),
                                  '-Installer', str(self.distribution / 'install.ps1'), '-Target', str(self.target)],
-                                capture_output=True, text=True, errors='replace', timeout=60)
+                                capture_output=True, text=True, errors='replace', timeout=60,
+                                env=child_environment(os.environ.get('NDD_TEST_POWERSHELL', 'powershell')))
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('injected copy failure', result.stderr)
         self.assertEqual(snapshot(self.target), before)
@@ -395,7 +661,8 @@ function Remove-Item {
         result = subprocess.run([os.environ.get('NDD_TEST_POWERSHELL', 'powershell'),
                                  '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', str(driver),
                                  '-Installer', str(self.distribution / 'install.ps1'), '-Target', str(self.target)],
-                                capture_output=True, text=True, errors='replace', timeout=60)
+                                capture_output=True, text=True, errors='replace', timeout=60,
+                                env=child_environment(os.environ.get('NDD_TEST_POWERSHELL', 'powershell')))
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('Uninstall incomplete', result.stdout)
         self.assertIn('injected delete failure', result.stderr)

@@ -1,95 +1,52 @@
-# Setup contract
+# Project setup
 
-`ndd-setup` checks whether the current project can use the installed NDD skills
-and confirms a personal feature prefix. Inspection is read-only. The only normal
-write is saving that prefix in local Git config after the user's confirmation.
-The first requested specification creates its feature directory; setup creates
-no tracked initialization files.
+Run `/ndd-setup` in Claude Code or `$ndd-setup` in Codex, inside your project.
+It checks project rules, installed skills and available verification commands,
+then confirms a personal prefix for feature names.
 
-## Inspection
+## What setup changes
 
-Read applicable project and ancestor instructions, relevant overrides/imports,
-project and user skill metadata, instruction-loading settings and test/build/lint
-definitions. Inspect full skill bodies only for a likely conflict. Missing access
-is reported as unverified. Do not read credentials, `.env`, auth caches or history,
-or execute project jobs and hooks merely to inspect them.
+After you confirm a prefix, setup saves `ndd.prefix` in the repository's local
+Git config and records the project and value in `~/.ndd/projects`. Both agents
+share these settings. Neither is committed or pushed.
 
-Existing `AGENTS.md` and `CLAUDE.md` remain unchanged, both project and personal.
-Do not create a missing instruction file, add an import, copy project templates,
-write `.ndd-kit.json`, or create an empty specs folder. Skills contain the workflow;
-project instructions continue to define the team's working rules.
+Setup creates no tracked project files, instruction blocks, templates or empty
+specs folders. Existing `AGENTS.md` and `CLAUDE.md` stay unchanged unless you
+approve a specific fix for a real conflict. Project checks are inspected, not run.
 
-## Personal prefix
+Repeat setup reuses a valid saved prefix. If its registry record is missing,
+setup adds it; unchanged settings and records are left alone. A save or registration
+failure is reported rather than treated as successful setup.
 
-Read the repository-local `ndd.prefix`. When absent, suggest a short prefix from
-`git config user.name`, explain that it separates teammates' feature numbers, and
-let the user accept or supply another value. Validate it and save only the explicit
-choice. A valid saved choice is reused without repeated confirmation or writes.
-The shared [prefix and identifier rules](../skills/ndd-setup/references/feature-ids.md)
-define validation, missing Git identity, collisions and command resolution.
+## Your prefix
 
-For a confirmed `ak`, Git adds this section to its existing local config:
+Setup suggests a prefix from your Git author name, or asks you to supply one.
+Use 2–16 lowercase letters or digits, starting with a letter, such as `ak`.
+Choose different prefixes for teammates.
 
-```ini
-[ndd]
-    prefix = ak
-```
+With `ak`, new features are named `ak-001-feature`, `ak-002-feature`, and so on.
+`ndd-plan 001` and `ndd-do 001` select your feature; `ndd-plan iv-001` explicitly
+selects another prefix. You can also give the full feature path. Ambiguous matches
+require clarification.
 
-No separate `ndd.prefix` file is created. The setting is shared by both agents in
-this clone (and its linked worktrees), stays out of commits, and is not pushed.
-On another computer or clone, setup asks again; recommend using the same prefix.
-No global Git settings or author identity are changed. Without Git, offer a
-session-only choice; do not initialize a repository or create a fallback file.
+A new clone needs setup again; you can use the same personal prefix. Changing
+it affects future features and does not rename existing documents.
 
-New tasks use `ak-001-feature`, `ak-002-feature`, and so on. A teammate with `iv`
-has a separate sequence. `ndd-plan 001` and `ndd-do 001` use the current prefix;
-`ndd-plan iv-001` selects a teammate's task explicitly. Existing feature names
-remain unchanged. Changing a prefix affects future tasks, not existing documents.
+## Without Git
 
-Prefixes reduce collisions, but do not reserve ids across unseen branches or
-clones. Choose different prefixes for teammates. If duplicate ids become visible,
-ask for an exact path; any rename is a separate approved change.
+Installing the skills does not require a project repository or create Git config.
+When setup runs outside a Git repository, it offers a prefix for the current
+conversation only. It does not initialize Git, create a config file or register
+that session-only choice. An unreadable existing config is reported as an error.
 
-## Real contradictions
+## Task documents
 
-Report only actual blockers, separately from optional suggestions. Existing stack
-choices, formatting preferences or another SDD framework are not automatically
-conflicts. Prefer a compatible output path or verification command over editing
-team instructions. If the user chooses an instruction edit to resolve a blocker,
-show its exact minimal diff, obtain approval, preserve unrelated work and verify
-the result.
+The first `ndd-spec` creates `specs/PREFIX-NNN-feature/spec.md`; `ndd-plan` adds
+`plan.md` beside it. Templates come from the installed skills. Updating NDD does
+not rewrite existing documents.
 
-Do not change permissions, hooks, sandbox policy or other agent settings to force
-NDD to work. A readiness report does not approve any future spec or plan.
+If your project uses another location, provide an explicit feature path.
+Setup reports actual conflicts with project rules and suggests a resolution;
+it does not replace those rules or change permissions to make NDD work.
 
-## Templates and documents
-
-Standard templates stay in the installed kit at `ndd-setup/assets/spec.md` and
-`plan.md`. No custom project-template selection is provided. Future documents use
-the currently installed templates; existing feature documents are not rewritten
-when the kit is updated. The default output is `specs/PREFIX-NNN-feature-slug/`.
-
-A new project's first NDD task adds only `spec.md`, then `plan.md`. It does not
-convert existing application code into specifications. If the default path is
-unavailable, explicitly supply a feature path; subsequent commands can use that
-path without introducing another settings file.
-
-## Older projects
-
-Read [existing-project guidance](../skills/ndd-setup/references/project-state.md)
-when encountering legacy manifests, templates or instruction blocks. Honor safe
-legacy output locations, but preserve these files and do not use their templates.
-If an old instruction explicitly demands the old workflow, surface that conflict
-and propose a minimal approved resolution. Cleanup of legacy project files is a
-separate request; machine uninstall never performs it.
-
-Invoke `ndd-setup` without flags. Team members install the same kit release. A
-repeat setup with an unchanged prefix is read-only, with no timestamp or version-file churn.
-
-## Limits
-
-The operating agent follows the skill instructions. They are not filesystem
-access controls and cannot prove that inaccessible corporate settings were checked.
-Keep normal agent permissions and exercise the [manual scenarios](testing.md)
-before declaring end-to-end agent compatibility. When a diagram adds clarity,
-use the bundled rounded Unicode style rather than adding mandatory diagrams.
+Next: [workflow and approvals](workflow.md).

@@ -46,7 +46,12 @@ Do not recursively search unrelated projects or global directories for a match.
 
 ## Removal
 
-Machine uninstall only removes installed skills and their installation state.
-It does not scan or change projects, including legacy templates/manifests/blocks,
-feature documents, source code or Git settings. The downloaded source checkout
-is also preserved; it is not part of the installed copy.
+Machine uninstall removes installed skills and their installation state. With
+both agents selected, it also removes the verified clean NDD clone containing
+the installer, unless `--keep-source` / `-KeepSource` is requested. Unverified or
+modified clones are kept with an explanation; other downloads are not searched.
+Full uninstall first clears registered, unchanged local `ndd.prefix` values
+using `~/.ndd/projects`; unresolved records are retained with warnings and do not
+stop removal. It does not
+scan the machine or change legacy templates, manifests, blocks, feature documents,
+source code, or other Git settings. Single-agent uninstall preserves the shared registry.

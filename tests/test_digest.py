@@ -8,6 +8,8 @@ import subprocess
 import tempfile
 import unittest
 
+from process_environment import child_environment
+
 SCRIPTS = Path(__file__).resolve().parents[1] / 'skills/ndd-plan/scripts'
 
 
@@ -21,7 +23,8 @@ class DigestTests(unittest.TestCase):
                            '-ExecutionPolicy', 'Bypass', '-File', str(SCRIPTS / 'spec-digest.ps1'), '-Path', str(path)]
             else:
                 command = ['/bin/bash', str(SCRIPTS / 'spec-digest.sh'), str(path)]
-            result = subprocess.run(command, capture_output=True, text=True, timeout=15)
+            result = subprocess.run(command, capture_output=True, text=True, timeout=15,
+                                    env=child_environment(command[0]))
             if success:
                 self.assertEqual(result.returncode, 0, result.stderr)
                 return result.stdout.strip()

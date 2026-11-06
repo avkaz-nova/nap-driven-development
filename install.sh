@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Bash 3.2+; no writes outside the selected skill directories and their receipts.
+# Bash 3.2+; uninstall can also remove the verified, clean NDD source clone.
 set -euo pipefail
 
 KIT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -7,17 +7,30 @@ KIT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 NAMES=(ndd-setup ndd-spec ndd-plan ndd-do)
 CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills"
 CODEX_DIR="$HOME/.agents/skills"
-WANT_CLAUDE=0 WANT_CODEX=0 UNINSTALL=0 DRY_RUN=0 REPLACE=0
+WANT_CLAUDE=0 WANT_CODEX=0 UNINSTALL=0 DRY_RUN=0 REPLACE=0 KEEP_SOURCE=0
 MODE=copy
 TARGETS=() LOCKS=() STAGES=() DESTS=() BACKUPS=() RECEIPTS=()
 OLD_MOVED=() RECORD_MOVED=() NEW_INSTALLED=() NEW_RECORDED=()
 SUCCESS=0
 
+cleanup_registered_projects() {
+  local helper="$KIT_DIR/skills/ndd-setup/scripts/project-registry.sh"
+  local state_dir=${NDD_STATE_DIR:-$HOME/.ndd}
+  if [[ -f "$helper" ]]; then
+    if ! bash "$helper" cleanup "$@"; then
+      echo "Warning: project cleanup was skipped or incomplete; continuing NDD removal. Registry retained at $state_dir/projects." >&2
+    fi
+  elif [[ -e "$state_dir/projects" || -L "$state_dir/projects" || -e "$state_dir/.projects.lock" ]]; then
+    echo "Warning: project cleanup helper is missing; continuing NDD removal. Registry retained at $state_dir/projects." >&2
+  fi
+}
+
 usage() {
   cat <<'HELP'
 Usage: bash install.sh [--claude | --codex | --all] [options]
   --dry-run           show actions without writing anything
-  --uninstall         permanently remove owned NDD skills and all NDD install state
+  --uninstall         remove owned skills/state; with both agents, clean up this NDD clone
+  --keep-source       keep this source clone during uninstall
   --replace           explicitly back up and replace conflicting/modified skills
   --link              development mode: link skills to this checkout
   --claude-dir PATH   select a custom Claude skills directory
@@ -25,7 +38,8 @@ Usage: bash install.sh [--claude | --codex | --all] [options]
   -h, --help          show help
 Without a target, detect existing agent directories; if none exist, use --all
 or choose one agent explicitly. Receipts/backups live beside each skills
-folder in <skills-directory>.ndd-kit. No project files are changed.
+folder in <skills-directory>.ndd-kit. Full uninstall also clears registered
+ndd.prefix settings from ~/.ndd/projects (override root with NDD_STATE_DIR).
 HELP
 }
 fail() { echo "Error: $*" >&2; exit 1; }
@@ -36,6 +50,7 @@ while [[ $# -gt 0 ]]; do
     --all) WANT_CLAUDE=1; WANT_CODEX=1 ;;
     --dry-run) DRY_RUN=1 ;;
     --uninstall) UNINSTALL=1 ;;
+    --keep-source) KEEP_SOURCE=1 ;;
     --replace) REPLACE=1 ;;
     --link) MODE=link ;;
     --claude-dir|--codex-dir)
@@ -50,6 +65,7 @@ while [[ $# -gt 0 ]]; do
 done
 [[ $UNINSTALL -eq 0 || $REPLACE -eq 0 ]] || fail "--replace cannot be used with --uninstall; preserve modified files manually."
 [[ $UNINSTALL -eq 0 || "$MODE" == copy ]] || fail "--link is an install option."
+[[ $KEEP_SOURCE -eq 0 || $UNINSTALL -eq 1 ]] || fail "--keep-source requires --uninstall."
 if [[ $WANT_CLAUDE -eq 0 && $WANT_CODEX -eq 0 ]]; then
   [[ -d "${CLAUDE_DIR%/skills}" ]] && WANT_CLAUDE=1
   [[ -d "${CODEX_HOME:-$HOME/.codex}" || -d "$HOME/.agents" ]] && WANT_CODEX=1
@@ -116,6 +132,44 @@ check_path() {
   while [[ ! -d "$current" ]]; do current=$(dirname "$current"); done
   [[ -w "$current" ]] || fail "Directory is not writable: $current"
 }
+# Only inspect this script's clone. Receipt paths never authorize source deletion.
+clone_git() {
+  git --no-optional-locks -c core.fsmonitor=false --git-dir="$KIT_DIR/.git" --work-tree="$KIT_DIR" "$@"
+}
+source_retention_reason() {
+  local origin entries changes commits
+  if [[ $KEEP_SOURCE -eq 1 ]]; then echo '--keep-source requested'; return; fi
+  if [[ $WANT_CLAUDE -ne 1 || $WANT_CODEX -ne 1 ]]; then echo 'select both agents (--all) to remove the clone'; return; fi
+  if [[ "$KIT_DIR" == / || "$KIT_DIR" == "$HOME" || "$KIT_DIR" != "$(cd "$KIT_DIR" && pwd -P)" ]]; then
+    echo 'source is a protected or redirected directory'; return
+  fi
+  if [[ ! -d "$KIT_DIR/.git" || -L "$KIT_DIR/.git" ]]; then
+    echo 'not a standalone Git clone (ZIPs and linked worktrees are kept)'; return
+  fi
+  if ! command -v git >/dev/null 2>&1; then echo 'Git is unavailable; source could not be verified'; return; fi
+  origin=$(clone_git config --local --no-includes --get remote.origin.url 2>/dev/null) || {
+    echo 'could not verify the source repository'; return;
+  }
+  case "$origin" in
+    https://github.com/avkaz/nap-driven-development|https://github.com/avkaz/nap-driven-development.git|git@github.com:avkaz/nap-driven-development.git|ssh://git@github.com/avkaz/nap-driven-development.git) ;;
+    *) echo 'origin is not the NDD repository'; return ;;
+  esac
+  if [[ -d "$KIT_DIR/.git/worktrees" ]]; then echo 'clone has linked worktree metadata'; return; fi
+  entries=$(clone_git ls-files -v 2>/dev/null) || { echo 'could not verify the source index'; return; }
+  if printf '%s\n' "$entries" | LC_ALL=C grep '^[a-zS] ' >/dev/null; then
+    echo 'source index can hide changes (assume-unchanged or skip-worktree)'; return
+  fi
+  changes=$(clone_git status --porcelain=v1 --untracked-files=all --ignored --ignore-submodules=none 2>/dev/null) || {
+    echo 'could not check local source changes'; return;
+  }
+  if [[ -n "$changes" ]]; then echo 'clone contains local changes, untracked or ignored files'; return; fi
+  # Include stashes, detached HEAD and reflogs, not just the checked-out branch.
+  commits=$(clone_git rev-list --max-count=1 HEAD --all --reflog --not --remotes 2>/dev/null) || {
+    echo 'could not check unpublished source commits'; return;
+  }
+  if [[ -n "$commits" ]]; then echo 'clone contains history not present in local remote-tracking refs'; return; fi
+  return 0
+}
 VERSION=unknown
 if [[ $UNINSTALL -eq 0 ]]; then
   [[ -f "$KIT_DIR/skills/ndd-setup/VERSION" ]] || fail "Incomplete distribution: VERSION missing."
@@ -161,7 +215,18 @@ for i in "${!TARGETS[@]}"; do
     echo "  Permanently remove all receipts, backups and staging files: $target.ndd-kit"
   fi
 done
-[[ $DRY_RUN -eq 0 ]] || { echo 'Dry run: no files changed.'; exit 0; }
+SOURCE_REASON=''
+if [[ $UNINSTALL -eq 1 ]]; then
+  SOURCE_REASON=$(source_retention_reason)
+  if [[ -n "$SOURCE_REASON" ]]; then echo "Keep source: $KIT_DIR ($SOURCE_REASON)"
+  else echo "Permanently remove source clone after uninstall: $KIT_DIR"; fi
+fi
+if [[ $DRY_RUN -eq 1 ]]; then
+  if [[ $UNINSTALL -eq 1 && $WANT_CLAUDE -eq 1 && $WANT_CODEX -eq 1 ]]; then
+    cleanup_registered_projects --dry-run
+  fi
+  echo 'Dry run: no files changed.'; exit 0
+fi
 
 # Uninstall deliberately has no backup or rollback. Keep the lock until all
 # contents have been removed, then remove the empty metadata directory.
@@ -187,6 +252,9 @@ if [[ $UNINSTALL -eq 1 ]]; then
     mkdir "$target.ndd-kit/lock" 2>/dev/null || fail "Install lock exists: $target.ndd-kit/lock. Check for an active/interrupted install."
     LOCKS+=("$target.ndd-kit/lock")
   done
+  if [[ $WANT_CLAUDE -eq 1 && $WANT_CODEX -eq 1 ]]; then
+    cleanup_registered_projects
+  fi
   for target in "${TARGETS[@]}"; do
     [[ -d "$target.ndd-kit" ]] || continue
     for name in "${NAMES[@]}"; do
@@ -210,7 +278,17 @@ if [[ $UNINSTALL -eq 1 ]]; then
     done
     rmdir "$target.ndd-kit"
   done
-  echo 'NDD skills and install state removed. No backups retained. Project files and source checkout preserved.'
+  if [[ -z "$SOURCE_REASON" ]]; then
+    # Recheck after removing skills, and leave the directory before deleting it.
+    SOURCE_REASON=$(source_retention_reason)
+    if [[ -z "$SOURCE_REASON" ]]; then
+      cd "$(dirname "$KIT_DIR")"
+      rm -rf -- "$KIT_DIR"
+      exists "$KIT_DIR" && fail "Source removal incomplete: $KIT_DIR"
+      echo "Removed source clone: $KIT_DIR"
+    else echo "Source retained: $KIT_DIR ($SOURCE_REASON)"; fi
+  fi
+  echo 'NDD skills and install state removed. No backups retained. Your project files were preserved.'
   exit 0
 fi
 
