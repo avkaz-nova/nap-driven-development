@@ -120,14 +120,12 @@ class InstallerTests(unittest.TestCase):
         self.assertEqual(len(backups), 1)
         self.assertEqual(backups[0].read_text(encoding='utf-8'), 'user work')
 
-    def test_local_edits_block_update_and_uninstall(self) -> None:
+    def test_local_edits_block_update(self) -> None:
         self.run_installer()
         file = self.target / 'ndd-spec/SKILL.md'
         file.write_bytes(file.read_bytes() + b'\nLocal instructions.\n')
         before = snapshot(self.root)
         self.run_installer(success=False)
-        self.assertEqual(snapshot(self.root), before)
-        self.run_installer('--uninstall', success=False)
         self.assertEqual(snapshot(self.root), before)
         self.run_installer('--replace')
         self.assertTrue(any(b'Local instructions.' in p.read_bytes()
@@ -142,6 +140,7 @@ class InstallerTests(unittest.TestCase):
         self.run_installer('--uninstall')
         self.assertEqual([p.name for p in self.target.iterdir()], ['ndd-custom'])
         self.assertEqual(snapshot(self.distribution), source_before)
+        self.assertFalse(self.state.exists())
         self.run_installer('--uninstall')
         self.assertEqual((custom / 'keep.md').read_text(), 'keep')
 
@@ -149,10 +148,12 @@ class InstallerTests(unittest.TestCase):
     def test_link_uninstall_never_deletes_source(self) -> None:
         source_before = snapshot(self.distribution)
         self.run_installer('--link')
+        self.run_installer('--link')  # Old backups now contain links/junctions too.
         for name in NAMES:
             self.assertEqual((self.target / name).resolve(), (self.distribution / 'skills' / name).resolve())
         self.run_installer('--uninstall')
         self.assertEqual(snapshot(self.distribution), source_before)
+        self.assertFalse(self.state.exists())
 
     @unittest.skipIf(POWERSHELL and not WINDOWS, 'Directory junctions require Windows')
     def test_broken_links_can_be_uninstalled(self) -> None:
@@ -196,7 +197,7 @@ class InstallerTests(unittest.TestCase):
         self.run_installer()
         before_skills = snapshot(self.target)
         before_receipts = {p.name: p.read_bytes() for p in self.state.glob('*.receipt')}
-        (self.distribution / 'skills/ndd-setup/VERSION').write_text('0.2.1\n')
+        (self.distribution / 'skills/ndd-setup/VERSION').write_text('0.3.1\n')
         bin_dir = self.root / 'fake-bin'
         bin_dir.mkdir()
         wrapper = bin_dir / 'cp'
@@ -215,7 +216,7 @@ class InstallerTests(unittest.TestCase):
         self.run_installer()
         before = snapshot(self.target)
         before_receipts = {p.name: p.read_bytes() for p in self.state.glob('*.receipt')}
-        (self.distribution / 'skills/ndd-setup/VERSION').write_text('0.2.1\n')
+        (self.distribution / 'skills/ndd-setup/VERSION').write_text('0.3.1\n')
         driver = self.root / 'fail-copy.ps1'
         driver.write_text('''param([string]$Installer, [string]$Target)
 function Copy-Item {
@@ -269,6 +270,140 @@ function Copy-Item {
             self.assertEqual(snapshot(self.root), before)
         finally:
             self.target.parent.chmod(0o700)
+
+    def test_uninstall_purges_modified_skills_and_all_state(self) -> None:
+        self.run_installer('--codex-dir', str(self.other))
+        self.run_installer('--codex-dir', str(self.other))  # Accumulate update backups.
+        (self.target / 'ndd-spec/SKILL.md').write_text('local NDD edits', encoding='utf-8')
+        project = self.root / 'work-project'
+        project.mkdir()
+        (project / 'AGENTS.md').write_text('team rules')
+        (project / 'spec.md').write_text('project specification')
+        project_before = snapshot(project)
+        self.run_installer('--uninstall', '--codex-dir', str(self.other))
+        for target in (self.target, self.other):
+            self.assertEqual(list(target.iterdir()), [])
+            self.assertFalse(Path(str(target) + '.ndd-kit').exists())
+        self.assertEqual(snapshot(project), project_before)
+
+    def test_uninstall_purges_leftover_state_without_installed_skills(self) -> None:
+        self.run_installer()
+        self.run_installer()  # State like an old 0.2 uninstall that retained backups.
+        for name in NAMES:
+            shutil.rmtree(self.target / name)
+            (self.state / f'{name}.receipt').unlink()
+        stage = self.state / 'stage.interrupted'
+        stage.mkdir()
+        (stage / 'leftover.txt').write_text('temporary installer data')
+        self.run_installer('--uninstall')
+        self.assertFalse(self.state.exists())
+        self.run_installer('--uninstall')
+        self.assertFalse(self.state.exists())
+
+    def test_uninstall_dry_run_preserves_edits_and_backups(self) -> None:
+        self.run_installer()
+        self.run_installer()
+        (self.target / 'ndd-spec/user-note.txt').write_text('local edits')
+        before = snapshot(self.root)
+        self.run_installer('--uninstall', '--dry-run')
+        self.assertEqual(snapshot(self.root), before)
+
+    def test_uninstall_foreign_name_blocks_all_targets(self) -> None:
+        self.run_installer()
+        foreign = self.other / 'ndd-spec'
+        foreign.mkdir(parents=True)
+        (foreign / 'user.txt').write_text('not NDD')
+        before = snapshot(self.root)
+        self.run_installer('--uninstall', '--codex-dir', str(self.other), success=False)
+        self.assertEqual(snapshot(self.root), before)
+
+    def test_uninstall_respects_active_lock(self) -> None:
+        self.run_installer()
+        lock = self.state / 'lock'
+        if POWERSHELL:
+            lock.write_text('active')
+        else:
+            lock.mkdir()
+        before = snapshot(self.root)
+        self.run_installer('--uninstall', success=False)
+        self.assertEqual(snapshot(self.root), before)
+
+    @unittest.skipIf(WINDOWS, 'POSIX nested link test; Windows junction backups covered separately')
+    def test_uninstall_does_not_follow_nested_or_broken_links(self) -> None:
+        self.run_installer()
+        external = self.root / 'external-project'
+        external.mkdir()
+        (external / 'keep.txt').write_text('preserve')
+        (self.state / 'backups' / 'external-link').symlink_to(external, target_is_directory=True)
+        (self.state / 'backups' / 'broken-link').symlink_to(self.root / 'missing')
+        (self.target / 'ndd-do' / 'external-link').symlink_to(external, target_is_directory=True)
+        before = snapshot(external)
+        self.run_installer('--uninstall')
+        self.assertEqual(snapshot(external), before)
+        self.assertFalse(self.state.exists())
+
+    @unittest.skipIf(POWERSHELL, 'POSIX delete failure injection')
+    def test_uninstall_failure_is_reported_and_retry_finishes_cleanup(self) -> None:
+        self.run_installer()
+        backups = snapshot(self.state / 'backups')
+        bin_dir = self.root / 'fake-bin'
+        bin_dir.mkdir()
+        wrapper = bin_dir / 'rm'
+        wrapper.write_text('#!/bin/bash\ncase "${@: -1}" in */ndd-spec) echo "injected delete failure" >&2; exit 9;; esac\nexec /bin/rm "$@"\n')
+        wrapper.chmod(0o755)
+        environment = dict(os.environ, PATH=str(bin_dir) + os.pathsep + os.environ['PATH'])
+        result = self.run_installer('--uninstall', success=False, environment=environment)
+        self.assertIn('Uninstall incomplete', result.stdout)
+        self.assertFalse((self.target / 'ndd-setup').exists())
+        self.assertTrue((self.target / 'ndd-spec').exists())
+        self.assertFalse((self.state / 'lock').exists())
+        self.assertEqual(snapshot(self.state / 'backups'), backups)
+        self.run_installer('--uninstall')
+        self.assertFalse(self.state.exists())
+
+    def test_bundled_templates_work_without_source_or_project_setup(self) -> None:
+        self.run_installer()
+        shutil.rmtree(self.distribution / 'skills')
+        project = self.root / 'work-project'
+        project.mkdir()
+        (project / 'AGENTS.md').write_text('existing team rules')
+        before = snapshot(project)
+        for skill, template in (('ndd-spec', 'spec.md'), ('ndd-plan', 'plan.md')):
+            asset = self.target / skill / '../ndd-setup/assets' / template
+            self.assertTrue(asset.is_file())
+            self.assertIn('Acceptance', asset.read_text(encoding='utf-8'))
+        self.assertEqual(snapshot(project), before)
+        self.run_installer('--uninstall')
+        self.assertFalse(self.state.exists())
+
+    @unittest.skipUnless(POWERSHELL, 'PowerShell delete failure injection')
+    def test_powershell_uninstall_failure_and_retry(self) -> None:
+        self.run_installer()
+        before_backups = snapshot(self.state / 'backups')
+        driver = self.root / 'fail-delete.ps1'
+        driver.write_text('''param([string]$Installer, [string]$Target)
+function Remove-Item {
+    param([string]$LiteralPath, [switch]$Force, [switch]$Recurse)
+    if ((Split-Path $LiteralPath -Leaf) -eq 'SKILL.md' -and
+        (Split-Path (Split-Path $LiteralPath -Parent) -Leaf) -eq 'ndd-spec') {
+        throw 'injected delete failure'
+    }
+    Microsoft.PowerShell.Management\\Remove-Item @PSBoundParameters
+}
+& $Installer -ClaudeDir $Target -Uninstall
+''')
+        result = subprocess.run([os.environ.get('NDD_TEST_POWERSHELL', 'powershell'),
+                                 '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', str(driver),
+                                 '-Installer', str(self.distribution / 'install.ps1'), '-Target', str(self.target)],
+                                capture_output=True, text=True, errors='replace', timeout=60)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Uninstall incomplete', result.stdout)
+        self.assertIn('injected delete failure', result.stderr)
+        self.assertFalse((self.target / 'ndd-setup').exists())
+        self.assertFalse((self.state / 'lock').exists())
+        self.assertEqual(snapshot(self.state / 'backups'), before_backups)
+        self.run_installer('--uninstall')
+        self.assertFalse(self.state.exists())
 
 
 if __name__ == '__main__':

@@ -1,7 +1,7 @@
 ---
 name: ndd-do
 description: Implement and verify the next task in an approved, current NDD plan. Invoke explicitly with ndd-do; do not start from an unapproved or stale plan.
-argument-hint: "<feature id> [task id]"
+argument-hint: "<feature id | path to plan.md> [task id]"
 disable-model-invocation: true
 ---
 
@@ -13,9 +13,12 @@ A fresh session is optional; spec, plan and recorded evidence carry the context.
 
 ## Before editing
 
-1. Read applicable instructions, `.ndd-kit.json`, the spec, plan, relevant code
-   and tests, and Git status if available. Preserve unrelated changes. Resolve
-   the feature/task unambiguously; explain missing setup, files or task ids.
+1. Read applicable instructions, the spec, plan, relevant code and tests, and
+   Git status if available. Preserve unrelated changes. A manifest or project
+   templates are not required. If legacy NDD files exist, follow the
+   [existing-project guidance](../ndd-setup/references/project-state.md).
+   Resolve the feature/task id or supplied plan path unambiguously; explain
+   missing feature files or task ids without creating setup files.
    If the spec is already done, report it without editing unless the user
    requests a new revision through `ndd-spec`.
 2. Require spec status `approved` or `in-progress` and no unresolved
@@ -60,3 +63,6 @@ Report changes, verification, remaining blockers and a suggested commit message.
 Do not commit, push, deploy, change shared data or run production workflows
 unless separately authorized. Recommend committing code and its spec/plan
 updates together. Stop after the requested task(s).
+
+When a diagram helps explain a change or a blocker, use the
+[rounded Unicode diagram style](../ndd-setup/references/diagrams.md).

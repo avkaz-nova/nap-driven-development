@@ -1,126 +1,74 @@
 ---
 name: ndd-setup
-description: Inspect existing project instructions, skills and relevant agent settings, then propose a minimal NDD setup or update. Invoke explicitly with ndd-setup; apply only the exact changes the user approves.
-argument-hint: "[--dry-run]"
+description: Check whether the current project can use NDD without changing its instructions or copying templates. Invoke explicitly with ndd-setup; report readiness and conflicts, and get approval before any exceptional edit.
 disable-model-invocation: true
 ---
 
 # ndd-setup
 
-Connect this project to NDD without reorganizing the user's existing setup.
-`--dry-run` performs inspection and preview only. Other options are unsupported
-in this release (including the old experimental `--vendor`); explain the global
-installation path instead of silently ignoring them.
+Check readiness for the explicitly invoked NDD workflow. Normal setup is read-only:
+no instruction blocks, imports, project templates, manifest or empty specs folder.
+The first `ndd-spec` invocation creates the task documents when needed.
+Invoke `ndd-setup` without flags.
 
-This directory contains `VERSION` and `assets/{spec,plan,agents-block,principles}.md`.
-The other three NDD skills are siblings. Use this loaded skill's actual location;
-do not guess another installation if it differs. The format-2 project manifest
-is documented in [references/project-state.md](references/project-state.md).
-Read it when an existing manifest is found or before creating one.
+This skill contains `VERSION` and the standard `assets/spec.md` and `assets/plan.md`.
+The other three NDD skills are siblings. Use this loaded kit's actual location;
+never silently combine resources from different installations. These installed
+assets are the only templates: do not copy them into projects or select custom
+project templates. If resources are missing, report the incomplete installation.
 
-## 1. Inspect without writing
+## Inspect
 
-- State the running agent and loaded kit version. Use the Git root when inside
-  a repository; otherwise propose the current folder as project root. Report
-  the root and existing local changes. Do not initialize Git or create a branch.
-- Read applicable project/ancestor instructions, including overrides, scoped
-  rules and relevant imports. Inspect root `AGENTS.md`, `CLAUDE.md`, optional
-  `CLAUDE.local.md`, and nested instruction locations that affect the workflow.
-- Read `.ndd-kit.json`, existing specs/templates and managed blocks. Check for
-  malformed/duplicate markers, newer/incompatible manifests and local changes.
-- Inventory skill/command names and metadata in project and relevant user
-  directories. Read full bodies only for likely NDD collisions or conflicts.
-  Detect both global and project NDD copies, other SDD tools, and disabled skills.
-- Inspect known instruction files (`~/.codex/AGENTS.md`, `~/.claude/CLAUDE.md`)
-  and relevant skill/instruction-loading settings, accounting for configured
-  locations such as `CODEX_HOME` or `CLAUDE_CONFIG_DIR` where applicable. Do not
-  assume the presence of a directory proves an agent or skill is usable.
-- Do not recursively read agent state directories, auth files, `.env`, secrets,
-  conversation history or unrelated skills. Never dump environment variables or
-  whole configuration files. Report inaccessible/unknown settings as unverified.
-- Infer existing test/build/lint commands from project docs/configuration, but
-  do not execute them, load hooks, install dependencies or run project jobs.
+1. Identify the running agent, loaded kit version and project root (Git root when
+   available, otherwise the current folder). Report relevant local changes.
+   Do not initialize Git or create a branch.
+2. Read applicable project/ancestor instructions and relevant scoped rules,
+   overrides and imports. Read existing `AGENTS.md`/`CLAUDE.md` in place. Do not
+   create or edit project or global instruction files simply to enable NDD.
+3. Inventory relevant installed skills and command metadata, including duplicate
+   NDD versions or other SDD tools. Read full bodies only to investigate a likely
+   conflict. Inspect instruction/skill-loading settings and known user guidance
+   in the configured agent homes. Directory presence alone does not prove that
+   a skill loads. Report unavailable settings as unverified.
+4. Inspect the project's documented test/build/lint commands without running
+   jobs, hooks, migrations or installers. Do not scan auth caches, secrets,
+   `.env`, conversation history or unrelated global files. Never dump environment
+   variables or entire configuration files.
+5. Check that the default output directory `specs/` does not belong to an unrelated
+   workflow. Leave it absent until the first task. For an existing NDD project,
+   read [existing-project guidance](references/project-state.md) if a legacy
+   manifest, instruction block or copied template is found. Preserve those files.
 
-Global files are read-only throughout setup. Do not change permissions, agent
-settings, hooks, MCP connections or sandbox controls to make NDD work.
+## Resolve actual conflicts
 
-## 2. Propose the smallest integration
+Distinguish blocking contradictions from optional preferences. If the project's
+rules allow the NDD workflow, nothing needs to be edited. An existing stack,
+formatter, testing framework or another SDD tool is not automatically a conflict.
+NDD must respect project rules; its installation does not override them.
 
-Preserve existing rules, formatting and file layout. NDD does not replace project
-instructions or competing workflows. Classify findings as blocking conflicts,
-optional improvements, or information. Don't make optional cleanup a prerequisite.
+Prefer a compatible way of working, such as an explicitly requested output path,
+over editing shared instructions. Show any real contradiction with a concise
+quote, its effect and a recommended resolution. Do not edit a project's rules,
+permissions, global guidance, hooks or agent configuration to bypass it.
 
-Default layout decisions:
+If the user chooses an instruction edit to resolve a genuine blocker, first show
+the exact minimal diff and obtain approval. Re-read before applying it; ask again
+only if the proposed result materially changed. Preserve unrelated text and local
+work, verify the approved diff, and report the change. No general NDD block or
+personal global reminder is required.
 
-| Existing instructions | Proposed change |
-|---|---|
-| Neither | Create `AGENTS.md` with the NDD block; for Claude create `CLAUDE.md` importing `@AGENTS.md`. |
-| Only AGENTS | Add/update its NDD block; for Claude propose a small import file if needed. |
-| Only CLAUDE | Preserve it and add NDD there; when enabling Codex, show the exact common rules proposed for a new `AGENTS.md`. Never silently omit important project rules or use an implicit "See CLAUDE.md" pointer. |
-| Both | Preserve their separation. If an import already exposes the NDD block to both agents, reuse it; otherwise propose a short managed block in each. No automatic cross-import of the entire other file. |
+## Report
 
-Only prepare integration for agents the user selects; recommend both when the
-project is intended to move between them. Machine detection is advisory, not a
-reason to rewrite shared project choices. A project may target an agent that is
-not installed on this machine; report its unverified local availability.
+State:
+- whether NDD is ready, blocked, or partially unverified;
+- which installed templates and output location will be used;
+- any actual conflict and unresolved checks;
+- that a normal setup wrote no files;
+- the next invocation: `/ndd-spec <idea>` or `$ndd-spec <idea>`.
 
-- Default specs directory: `specs`; preserve a previously configured directory.
-  If that name already belongs to an unrelated workflow, propose a separate
-  relative directory. Never overwrite or reinterpret existing feature folders.
-- Render `assets/agents-block.md` with version and specs directory. Reuse existing
-  project principles. `assets/principles.md` is only an optional source for
-  missing commands; never insert unresolved placeholders or impose stack rules.
-- Do not migrate user instructions, archive old commands or vendor skills as
-  part of setup. Surface overlaps and let the user choose whether to use NDD.
-- If required skills are absent, show the relevant installer command. Project
-  setup itself must not install or modify global skills.
-- For unsupported newer versions, stop affected operations. For 0.1 manifests,
-  treat ownership as unverified and propose an explicit migration (see reference).
+A readiness report is not approval of a future spec or plan. Skills perform the
+workflow when explicitly invoked; normal coding requests need not use NDD.
+Repeated setup should remain a read-only check. Never commit or install globally.
 
-## 3. Show the reviewable result, then wait
-
-Before any writes, show the root, versions/locations, findings, exact proposed
-file operations, full text of new instruction blocks and a diff of existing files.
-Include template and manifest changes. Explain which important existing rules
-will or will not be shared between agents. Show blocking conflicts with concise
-quotes and recommended resolutions; do not expose secrets in the report.
-
-Collect necessary choices in one batch. Do not ask to approve a vague plan and
-reveal the actual edits afterwards. An explicit approval of the displayed changes
-is sufficient; don't ask again for those same edits. If `--dry-run`, stop here
-without writing files, backups, timestamps or manifests.
-
-## 4. Apply only the approved result
-
-Re-read files before editing. If they changed since the preview, regenerate the
-affected diff and obtain approval for the new result; don't overwrite concurrent
-work. If instructions changed, reconcile them before continuing.
-
-- Limit instruction edits to approved NDD marker blocks and explicitly approved
-  additions. Preserve all unrelated text, encoding and line endings. If a tool
-  cannot preserve these, show the additional changes before proceeding.
-- Refuse malformed/duplicate markers or symlinked output files/parents until a
-  concrete safe target is agreed. Never follow a project output link into global
-  settings. Preserve local modifications even inside managed blocks/templates.
-- For a file already tracked by Git with no pre-existing changes, its original
-  is recoverable. Otherwise include a local backup outside agent skill discovery
-  in the approved operations before replacement; never overwrite prior backups.
-  Do not commit private backups or raw copies of global settings to the project.
-- Create only approved templates, instruction additions and the format-2
-  manifest. Do not change existing feature specs or plans during setup.
-- Verify the written content against the approved preview. If interrupted or
-  partially failed, report exact completed/pending operations and recovery paths.
-  Do not claim success or revert unrelated work.
-
-## 5. Verify and report
-
-Check one managed block per intended file, correct imports/paths, no unresolved
-placeholders, preserved surrounding instructions, and consistent manifest hashes.
-Compare the final diff with the preview (or before/after content without Git).
-Do not infer runtime skill discovery from files alone; say which agent checks
-were actually observed and which remain unverified.
-
-A repeat setup with unchanged inputs must produce no writes, no duplicate imports
-and no timestamp-only changes. Updates require a new preview and approval. Finish
-with changed files, verification, any unresolved conflicts and the next command:
-`/ndd-spec <idea>` in Claude Code or `$ndd-spec <idea>` in Codex CLI/IDE. Never commit.
+When a diagram helps explain a conflict or workflow, use the
+[rounded Unicode diagram style](references/diagrams.md). Skip diagrams that add no value.

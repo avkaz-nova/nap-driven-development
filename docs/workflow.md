@@ -2,6 +2,10 @@
 
 NDD uses `spec.md` and `plan.md` per feature. The spec describes agreed behaviour;
 the plan describes implementation and stores progress and verification evidence.
+No manifest, instruction-file changes or project template folder is required.
+`ndd-spec` and `ndd-plan` use the standard templates bundled with `ndd-setup`.
+Normal setup is an optional read-only readiness check. For older project locations,
+see [existing-project guidance](../skills/ndd-setup/references/project-state.md).
 
 | Operation | Required state | Result |
 |---|---|---|
@@ -55,3 +59,11 @@ One task per invocation is the default; the user can request several. A fresh
 session is optional. Continue in the other agent by reading the same documents
 and checking the same gates. Commit spec/plan updates with code when the user
 chooses to commit; NDD itself does not authorize external actions.
+
+## Diagrams
+
+When useful for understanding behaviour, architecture or a workflow, use editable
+Unicode text diagrams with rounded boxes and aligned arrows. Keep branching,
+merging and return paths explicit. The four skills share the
+[diagram style reference](../skills/ndd-setup/references/diagrams.md). User-requested
+formats take precedence; a diagram is optional and does not replace written ACs.

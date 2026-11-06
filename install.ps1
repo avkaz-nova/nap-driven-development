@@ -4,6 +4,7 @@ Install NDD for Claude Code and/or Codex. PowerShell 5.1+ / 7+ on Windows.
 .DESCRIPTION
 Receipts and backups are stored beside each skills directory in <directory>.ndd-kit.
 Use -DryRun to preview; -Replace explicitly backs up and replaces conflicts.
+Uninstall permanently deletes owned skills and all NDD install state, without backups.
 #>
 [CmdletBinding()]
 param(
@@ -45,10 +46,6 @@ function Get-Entry([string]$Path) {
 function Test-Link($Item) {
     return $null -ne $Item -and ($Item.Attributes -band [IO.FileAttributes]::ReparsePoint)
 }
-function Test-HasSkills([string]$Target) {
-    foreach ($name in $Names) { if (Get-Entry (Join-Path $Target $name)) { return $true } }
-    return $false
-}
 function Get-TextHash([string]$Text) {
     $sha = [Security.Cryptography.SHA256]::Create()
     try { return ([BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($Text)))).Replace('-', '').ToLowerInvariant() }
@@ -77,6 +74,12 @@ function Get-Fingerprint([string]$Path) {
     $text = if ($lines.Count) { ($lines -join "`n") + "`n" } else { '' }
     return Get-TextHash $text
 }
+function Test-OwnedReceipt([string]$Receipt) {
+    $record = Get-Entry $Receipt
+    if (-not $record -or $record.PSIsContainer -or (Test-Link $record)) { return $false }
+    $lines = @(Get-Content -LiteralPath $Receipt -Encoding UTF8)
+    return $lines.Count -eq 5 -and $lines[0] -eq 'ndd-kit-install-v1' -and $lines[2] -in @('copy', 'link')
+}
 function Test-OwnedUnchanged([string]$Destination, [string]$Receipt) {
     $record = Get-Entry $Receipt
     if (-not $record -or $record.PSIsContainer -or (Test-Link $record)) { return $false }
@@ -101,11 +104,17 @@ function Assert-DirectoryPath([string]$Path) {
         $current = Split-Path $current -Parent
     }
 }
-function Remove-NewEntry([string]$Path) {
+function Remove-NddEntry([string]$Path) {
     $entry = Get-Entry $Path
     if (-not $entry) { return }
-    if (Test-Link $entry) { [IO.Directory]::Delete($Path) }
-    else { Remove-Item -LiteralPath $Path -Recurse -Force }
+    # Never recurse through a junction/symlink, including one inside an old backup.
+    if (Test-Link $entry) {
+        if ($entry.Attributes -band [IO.FileAttributes]::Directory) { [IO.Directory]::Delete($Path) }
+        else { [IO.File]::Delete($Path) }
+    } elseif ($entry.PSIsContainer) {
+        foreach ($child in Get-ChildItem -LiteralPath $Path -Force) { Remove-NddEntry $child.FullName }
+        [IO.Directory]::Delete($Path)
+    } else { Remove-Item -LiteralPath $Path -Force }
 }
 
 $Version = 'unknown'
@@ -120,7 +129,7 @@ if (-not $Uninstall) {
         if (Test-Link (Get-Entry $source)) { throw "Source must be a real directory: $source" }
         $null = Get-Fingerprint $source
     }
-    foreach ($asset in @('spec.md', 'plan.md', 'agents-block.md', 'principles.md')) {
+    foreach ($asset in @('spec.md', 'plan.md')) {
         if (-not (Test-Path -LiteralPath (Join-Path $KitDir "skills\ndd-setup\assets\$asset") -PathType Leaf)) { throw "Missing asset: $asset" }
     }
 }
@@ -132,7 +141,7 @@ if (@($Targets | Select-Object -Unique).Count -ne $Targets.Count) { throw 'Targe
 foreach ($target in $Targets) {
     Assert-DirectoryPath $target
     Assert-DirectoryPath "$target.ndd-kit"
-    Assert-DirectoryPath (Join-Path "$target.ndd-kit" 'backups')
+    if (-not $Uninstall) { Assert-DirectoryPath (Join-Path "$target.ndd-kit" 'backups') }
     $comparison = [StringComparison]::OrdinalIgnoreCase
     $separator = [IO.Path]::DirectorySeparatorChar
     if (($target + $separator).StartsWith($KitDir.TrimEnd('\', '/') + $separator, $comparison)) { throw 'Cannot install inside the distribution.' }
@@ -151,18 +160,64 @@ foreach ($target in $Targets) {
         $record = Join-Path "$target.ndd-kit" "$name.receipt"
         $entry = Get-Entry $record
         if ($entry -and ($entry.PSIsContainer -or (Test-Link $entry))) { throw "Invalid receipt: $record" }
-        if ((Get-Entry $dest) -and -not (Test-OwnedUnchanged $dest $record)) {
+        if ($Uninstall) {
+            if ((Get-Entry $dest) -and -not (Test-OwnedReceipt $record)) { throw "Cannot establish NDD ownership: $dest. No files removed." }
+            Write-Host "  Permanently remove if present (including local edits): $name"
+        } elseif ((Get-Entry $dest) -and -not (Test-OwnedUnchanged $dest $record)) {
             if (-not $Replace) { throw "Unowned or modified skill: $dest. Back it up/move it manually, or install with -Replace after reviewing -DryRun." }
             Write-Host "  BACK UP and replace: $name"
-        } elseif ($Uninstall) {
-            Write-Host "  Remove if present (retain backup): $name"
         } else {
             $mode = if ($Link) { 'link' } else { 'copy' }
             Write-Host "  Install $Version ($mode): $name"
         }
     }
+    if ($Uninstall -and (Test-Path -LiteralPath "$target.ndd-kit")) {
+        Write-Host "  Permanently remove all receipts, backups and staging files: $target.ndd-kit"
+    }
 }
 if ($DryRun) { Write-Host 'Dry run: no files changed.'; return }
+
+if ($Uninstall) {
+    $uninstallLocks = New-Object 'System.Collections.Generic.List[string]'
+    try {
+        foreach ($target in $Targets) {
+            if (-not (Test-Path -LiteralPath "$target.ndd-kit")) { continue }
+            $lock = Join-Path "$target.ndd-kit" 'lock'
+            $stream = [IO.File]::Open($lock, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
+            $stream.Dispose()
+            $uninstallLocks.Add($lock)
+        }
+        foreach ($target in $Targets) {
+            if (-not (Test-Path -LiteralPath "$target.ndd-kit")) { continue }
+            foreach ($name in $Names) {
+                $dest = Join-Path $target $name
+                if (Get-Entry $dest) {
+                    if (-not (Test-OwnedReceipt (Join-Path "$target.ndd-kit" "$name.receipt"))) { throw "Ownership changed: $dest" }
+                    Remove-NddEntry $dest
+                    Write-Host "  Removed: $name"
+                }
+            }
+            $lock = Join-Path "$target.ndd-kit" 'lock'
+            foreach ($entry in Get-ChildItem -LiteralPath "$target.ndd-kit" -Force) {
+                if ($entry.FullName -ne $lock) { Remove-NddEntry $entry.FullName }
+            }
+            # Hold the lock until contents are gone; remove the empty root last.
+            Remove-Item -LiteralPath $lock -Force
+            $null = $uninstallLocks.Remove($lock)
+            [IO.Directory]::Delete("$target.ndd-kit")
+        }
+    } catch {
+        Write-Warning 'Uninstall incomplete; already deleted files have no backup. Fix the reported error and rerun.'
+        throw
+    } finally {
+        foreach ($lock in $uninstallLocks) {
+            try { Remove-Item -LiteralPath $lock -Force }
+            catch { Write-Warning "Could not remove lock $lock`: $_" }
+        }
+    }
+    Write-Host 'NDD skills and install state removed. No backups retained. Project files and source checkout preserved.'
+    return
+}
 
 $Locks = New-Object 'System.Collections.Generic.List[string]'
 $Stages = New-Object 'System.Collections.Generic.List[string]'
@@ -170,7 +225,6 @@ $Journal = New-Object 'System.Collections.Generic.List[object]'
 $InstallFailed = $false
 try {
     foreach ($target in $Targets) {
-        if ($Uninstall -and -not (Test-HasSkills $target)) { continue }
         $null = New-Item -ItemType Directory -Force -Path "$target.ndd-kit"
         $lock = Join-Path "$target.ndd-kit" 'lock'
         # Exclusive file creation also rejects stale locks and concurrent installers.
@@ -179,36 +233,30 @@ try {
         $Locks.Add($lock)
     }
     foreach ($target in $Targets) {
-        if ($Uninstall -and -not (Test-HasSkills $target)) { continue }
         $null = New-Item -ItemType Directory -Force -Path $target
         foreach ($name in $Names) {
             $dest = Join-Path $target $name
             $record = Join-Path "$target.ndd-kit" "$name.receipt"
             if ((Get-Entry $dest) -and -not (Test-OwnedUnchanged $dest $record) -and -not $Replace) { throw "Destination changed: $dest" }
-            if ($Uninstall -and -not (Get-Entry $dest)) { continue }
             $stage = Join-Path "$target.ndd-kit" ('stage.' + [Guid]::NewGuid().ToString('N'))
             $null = New-Item -ItemType Directory -Path $stage
             $Stages.Add($stage)
-            if (-not $Uninstall) {
-                $source = Join-Path $KitDir "skills\$name"
-                $mode = if ($Link) { 'link' } else { 'copy' }
-                if ($Link) { $null = New-Item -ItemType Junction -Path (Join-Path $stage 'skill') -Target $source }
-                else { Copy-Item -LiteralPath $source -Destination (Join-Path $stage 'skill') -Recurse -Force }
-                $digest = Get-Fingerprint $source
-                if ((Get-Fingerprint (Join-Path $stage 'skill')) -ne $digest) { throw "Copy verification failed: $name" }
-                $receiptText = "ndd-kit-install-v1`n$Version`n$mode`n$source`n$digest`n"
-                [IO.File]::WriteAllText((Join-Path $stage 'receipt'), $receiptText, (New-Object Text.UTF8Encoding($false)))
-            }
+            $source = Join-Path $KitDir "skills\$name"
+            $mode = if ($Link) { 'link' } else { 'copy' }
+            if ($Link) { $null = New-Item -ItemType Junction -Path (Join-Path $stage 'skill') -Target $source }
+            else { Copy-Item -LiteralPath $source -Destination (Join-Path $stage 'skill') -Recurse -Force }
+            $digest = Get-Fingerprint $source
+            if ((Get-Fingerprint (Join-Path $stage 'skill')) -ne $digest) { throw "Copy verification failed: $name" }
+            $receiptText = "ndd-kit-install-v1`n$Version`n$mode`n$source`n$digest`n"
+            [IO.File]::WriteAllText((Join-Path $stage 'receipt'), $receiptText, (New-Object Text.UTF8Encoding($false)))
             $backup = Join-Path "$target.ndd-kit" ('backups\' + $name + '.' + [Guid]::NewGuid().ToString('N'))
             $null = New-Item -ItemType Directory -Force -Path $backup
             $operation = [PSCustomObject]@{ Destination=$dest; Receipt=$record; Backup=$backup; OldMoved=$false; RecordMoved=$false; NewInstalled=$false; NewRecorded=$false }
             $Journal.Add($operation)
             if (Get-Entry $dest) { Move-Item -LiteralPath $dest -Destination (Join-Path $backup 'skill'); $operation.OldMoved=$true }
             if (Get-Entry $record) { Move-Item -LiteralPath $record -Destination (Join-Path $backup 'receipt'); $operation.RecordMoved=$true }
-            if (-not $Uninstall) {
-                Move-Item -LiteralPath (Join-Path $stage 'skill') -Destination $dest; $operation.NewInstalled=$true
-                Move-Item -LiteralPath (Join-Path $stage 'receipt') -Destination $record; $operation.NewRecorded=$true
-            }
+            Move-Item -LiteralPath (Join-Path $stage 'skill') -Destination $dest; $operation.NewInstalled=$true
+            Move-Item -LiteralPath (Join-Path $stage 'receipt') -Destination $record; $operation.NewRecorded=$true
             if ($operation.OldMoved -or $operation.RecordMoved) { Write-Host "  Saved previous state: $backup" }
             else { Write-Host "  Installed: $name" }
         }
@@ -220,7 +268,7 @@ try {
     for ($i = $Journal.Count - 1; $i -ge 0; $i--) {
         $operation = $Journal[$i]
         try {
-            if ($operation.NewInstalled) { Remove-NewEntry $operation.Destination }
+            if ($operation.NewInstalled) { Remove-NddEntry $operation.Destination }
             if ($operation.NewRecorded) { Remove-Item -LiteralPath $operation.Receipt -Force }
             if ($operation.OldMoved) { Move-Item -LiteralPath (Join-Path $operation.Backup 'skill') -Destination $operation.Destination }
             if ($operation.RecordMoved) { Move-Item -LiteralPath (Join-Path $operation.Backup 'receipt') -Destination $operation.Receipt }
@@ -232,7 +280,7 @@ try {
     foreach ($stage in $Stages) {
         # Remove a staged junction itself before recursively deleting its container.
         try {
-            Remove-NewEntry (Join-Path $stage 'skill')
+            Remove-NddEntry (Join-Path $stage 'skill')
             Remove-Item -LiteralPath $stage -Recurse -Force
         } catch { $cleanupFailed = $true; Write-Warning "Could not clean staging directory $stage`: $_" }
     }
@@ -242,8 +290,5 @@ try {
     }
     if ($cleanupFailed -and -not $InstallFailed) { throw 'Install applied but cleanup is incomplete; inspect the reported paths before retrying.' }
 }
-if ($Uninstall) { Write-Host 'NDD skills removed. Project specs and instructions were preserved.' }
-else {
-    Write-Host "Installed NDD $Version. In your project use /ndd-setup (Claude Code) or `$ndd-setup (Codex)."
-    Write-Host 'Restart the agent if the skills do not appear.'
-}
+Write-Host "Installed NDD $Version. In your project use /ndd-setup (Claude Code) or `$ndd-setup (Codex)."
+Write-Host 'Restart the agent if the skills do not appear.'

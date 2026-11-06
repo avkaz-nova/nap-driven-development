@@ -1,24 +1,31 @@
 ---
 name: ndd-spec
 description: Create or revise an NDD feature specification describing expected behaviour and acceptance criteria. Invoke explicitly with ndd-spec; this phase does not implement code.
-argument-hint: "<feature idea | path to spec.md>"
+argument-hint: "<feature idea | path to spec.md> [output path in the request]"
 disable-model-invocation: true
 ---
 
 # ndd-spec
 
-Create or revise `specs/NNN-feature-slug/spec.md` (or the specs directory recorded
-in `.ndd-kit.json`). This phase may edit only that specification. Read applicable
-project instructions first; preserve unrelated work. Use the user's language.
+Create or revise `specs/NNN-feature-slug/spec.md`, or an explicitly requested
+project-relative feature path. This phase may edit only that specification and
+create its containing folder. Read applicable project instructions in place;
+preserve unrelated work. Use the user's language. No project manifest is required.
+If a legacy manifest exists, follow the [existing-project guidance](../ndd-setup/references/project-state.md).
 
 1. Resolve the project and feature unambiguously. For a new feature, choose the
-   next unused number without overwriting another folder. If the input is an
-   existing spec, keep its id and created date. If setup/templates are missing,
-   explain how to run `ndd-setup` and stop without creating partial files.
+   next unused number without overwriting another folder. Keep output inside
+   the project and do not write through links. If `specs/` belongs to another
+   workflow, ask for an explicit feature path. If the input is an
+   existing spec, keep its id and created date. Use the standard template at
+   `../ndd-setup/assets/spec.md`, relative to this loaded skill's directory.
+   Never look for or copy templates in the project. If the bundled template is
+   missing, report an incomplete NDD installation and stop before writing.
+   Setup is a readiness check, not a required on-disk initialization marker.
 2. Read the relevant code and interfaces, then ask only questions whose answers
    affect scope, observable behaviour or acceptance. Group at most three at a
    time, with recommended answers. Don't repeat questions already answered.
-3. Write a concise spec using the installed template:
+3. Write a concise spec using that bundled template:
    - Problem, users, requirements with stable R ids, non-goals, important edge
      cases, and verifiable acceptance criteria (AC ids referencing requirements).
    - Every requirement and promised edge case needs acceptance coverage.
@@ -43,3 +50,6 @@ requirements belong in that body, never only in frontmatter.
 Editorial body changes also invalidate the digest; confirm and re-plan briefly
 rather than silently bypassing the check. A lifecycle status change alone does
 not invalidate it. Next: `ndd-plan <feature id>`.
+
+When a diagram clarifies users, scenarios or behaviour, use the
+[rounded Unicode diagram style](../ndd-setup/references/diagrams.md).

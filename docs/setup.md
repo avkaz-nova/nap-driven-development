@@ -1,62 +1,62 @@
 # Setup contract
 
-`ndd-setup` is an agent-guided integration, not a global configuration manager.
-Its phases are inspection, exact preview, approval, application and verification.
+`ndd-setup` checks whether the current project can use the installed NDD skills.
+Normal setup is read-only and writes nothing. The first requested specification
+creates its feature directory; there is no required on-disk initialization marker.
 
-## What is inspected
+## Inspection
 
-Project/ancestor instructions and applicable overrides; project and user skills
-and command metadata; existing NDD state; relevant skill/instruction-loading
-settings; existing test/build/lint definitions. Full skill bodies are read only
-when needed to understand a conflict. Inaccessible settings are marked unverified.
+Read applicable project and ancestor instructions, relevant overrides/imports,
+project and user skill metadata, instruction-loading settings and test/build/lint
+definitions. Inspect full skill bodies only for a likely conflict. Missing access
+is reported as unverified. Do not read credentials, `.env`, auth caches or history,
+or execute project jobs and hooks merely to inspect them.
 
-Setup does not scan credentials, `.env`, auth caches or conversation history.
-It does not execute project jobs or hooks to discover what they do. Global files
-remain read-only. An unreadable corporate setting cannot be assumed absent.
+Existing `AGENTS.md` and `CLAUDE.md` remain unchanged, both project and personal.
+Do not create a missing instruction file, add an import, copy project templates,
+write `.ndd-kit.json`, or create an empty specs folder. Skills contain the workflow;
+project instructions continue to define the team's working rules.
 
-## Minimal integration
+## Real contradictions
 
-New projects can share `AGENTS.md` through an `@AGENTS.md` import in `CLAUDE.md`.
-Existing independent instructions keep their layout, rules and formatting; short
-NDD blocks can be added to both when necessary. If a common rule would not reach
-one of the selected agents, setup shows that gap and the exact proposed addition.
+Report only actual blockers, separately from optional suggestions. Existing stack
+choices, formatting preferences or another SDD framework are not automatically
+conflicts. Prefer a compatible output path or verification command over editing
+team instructions. If the user chooses an instruction edit to resolve a blocker,
+show its exact minimal diff, obtain approval, preserve unrelated work and verify
+the result.
 
-No automatic migration, old-command archiving, permission changes, stack rules
-or removal of another SDD framework. Blocking contradictions need a resolution;
-optional cleanups do not prevent adopting NDD. Project integrations can include
-an agent not installed on the current machine.
+Do not change permissions, hooks, sandbox policy or other agent settings to force
+NDD to work. A readiness report does not approve any future spec or plan.
 
-## Approval and preservation
+## Templates and documents
 
-Before writing, show file operations, exact added text and diffs. Approval applies
-to those changes. If files change after preview, obtain approval for the changed
-result. Dry-run creates no backup, manifest, directory or timestamp.
+Standard templates stay in the installed kit at `ndd-setup/assets/spec.md` and
+`plan.md`. No custom project-template selection is provided. Future documents use
+the currently installed templates; existing feature documents are not rewritten
+when the kit is updated. The default output is `specs/NNN-feature-slug/`.
 
-Managed blocks do not make user modifications disposable. Changed templates and
-blocks need a merge decision. Output paths cannot traverse links outside the
-project. Malformed or duplicate markers need an explicit repair proposal.
+A new project's first NDD task adds only `spec.md`, then `plan.md`. It does not
+convert existing application code into specifications. If the default path is
+unavailable, explicitly supply a feature path; subsequent commands can use that
+path without introducing another settings file.
 
-For pre-existing uncommitted/untracked content, include a recoverable local backup
-in the approved operations before replacing it. Do not commit private backups or
-global configuration snapshots. Check the final result against the approved diff.
+## Older projects
 
-## Updates and portability
+Read [existing-project guidance](../skills/ndd-setup/references/project-state.md)
+when encountering legacy manifests, templates or instruction blocks. Honor safe
+legacy output locations, but preserve these files and do not use their templates.
+If an old instruction explicitly demands the old workflow, surface that conflict
+and propose a minimal approved resolution. Cleanup of legacy project files is a
+separate request; machine uninstall never performs it.
 
-The [format-2 manifest](../skills/ndd-setup/references/project-state.md) records only
-portable project choices and managed content hashes. Repeated unchanged setup is
-a no-op. Setup preserves feature specs/plans and never upgrades them in bulk.
-
-Global skill updates do not edit projects. A newer incompatible project format
-must not be downgraded by an older setup. Old 0.1 manifests require an explicit,
-reviewed adoption; no assumptions of ownership from filenames alone.
-
-`--vendor` from 0.1 was experimental and is not available in 0.2. Team members
-install the same release globally. Vendoring may return after duplicate-skill
-resolution is tested in both agents.
+Invoke `ndd-setup` without flags. Team members install the same kit release. A
+repeat setup is another read-only check, with no timestamp or version-file churn.
 
 ## Limits
 
-The operating agent performs the edits. These instructions are not filesystem
-access controls and do not prove that all undiscoverable organization settings
-were checked. Test the scenarios in [testing.md](testing.md) in each supported
-agent before claiming a release is validated. Keep the agent's normal permissions.
+The operating agent follows the skill instructions. They are not filesystem
+access controls and cannot prove that inaccessible corporate settings were checked.
+Keep normal agent permissions and exercise the [manual scenarios](testing.md)
+before declaring end-to-end agent compatibility. When a diagram adds clarity,
+use the bundled rounded Unicode style rather than adding mandatory diagrams.

@@ -10,7 +10,7 @@ telemetry, package-installation or project-setup side effects.
 | `--all` | `-All` | Select both |
 | `--dry-run` | `-DryRun` | Inspect and print without writing |
 | `--replace` | `-Replace` | Back up and replace conflicting/modified skills |
-| `--uninstall` | `-Uninstall` | Remove unchanged owned skills, retaining backups |
+| `--uninstall` | `-Uninstall` | Permanently remove owned skills and all NDD install state |
 | `--link` | `-Link` | Development symlinks/junctions into this checkout |
 | `--claude-dir /absolute/path` | `-ClaudeDir C:\absolute\path` | Select an explicit Claude skills directory |
 | `--codex-dir /absolute/path` | `-CodexDir C:\absolute\path` | Select an explicit Codex skills directory |
@@ -46,10 +46,13 @@ source path and content fingerprint. Receipts are local machine state, never
 project configuration, and should not be copied between machines.
 
 A matching name or NDD marker is not proof of ownership. A skill with no receipt,
-changed contents, extra files, or a changed link target blocks the operation.
+changed contents, extra files, or a changed link target blocks an install/update.
+For uninstall, a valid ownership receipt is sufficient even when skill contents
+were edited: removal is the explicitly requested action.
 Preview a deliberate replacement with `--replace --dry-run` / `-Replace -DryRun`.
 Then use the same command without the dry-run option if that is your decision.
-Replacement backs up even unowned files. Uninstall has no force/replace option.
+Replacement backs up even unowned files. Uninstall has no force/replace option;
+missing/invalid ownership for an existing skill blocks deletion before changes.
 
 Updates copy and verify each skill in a staging directory before replacing the
 old one. All selected targets are preflighted and locked. A handled failure
@@ -58,11 +61,12 @@ empty directories also count as modifications. Permission bits are not part of
 the content fingerprint.
 
 Backups are under `<skills-directory>.ndd-kit/backups/<name>.<unique-id>/`, with
-`skill` and `receipt` entries when an old installation existed. Backups are not
-pruned automatically. Inspect and remove obsolete backup directories yourself
-when you no longer need them; a backup may include your private custom instructions.
+`skill` and `receipt` entries when an old installation existed. Install/update
+retains them for recovery. Uninstall deletes ALL this NDD state, including older
+backups, and creates no new backup. Inspect/save anything you want to keep before
+requesting uninstall; a backup may contain your custom instructions.
 
-## Recover from an interruption
+## Recover from an interrupted install/update
 
 A process kill, power loss or filesystem failure can interrupt any installer.
 Do not assume rollback completed if the process never printed its final result.
@@ -88,7 +92,22 @@ NDD; use a copied release for routine work. Moving/deleting the checkout leaves
 broken links; uninstall recognizes its own links and removes only those links.
 PowerShell uses Windows junctions, not administrator-only symbolic links.
 
-Uninstall leaves project specs and instructions intact. To disconnect a project,
-review and remove only its NDD marker blocks, inserted imports and `.ndd-kit.json`.
-Keep your feature documents and custom rules. Do not delete an entire instruction
-file merely because setup once added a block to it.
+## Clean uninstall
+
+Uninstall preflights every selected target, then permanently deletes its four
+owned skills and all contents of `<skills-directory>.ndd-kit`: receipts, backups,
+leftover staging files and the metadata directory itself. Existing backups are
+removed even if no installed skills remain. Local edits inside owned skills are
+also removed. A dry-run performs none of these deletions.
+
+Nested symlinks/junctions are removed as links, including in old backups; their
+targets are not traversed. An active/stale lock blocks concurrent removal. After
+an interrupted uninstall, ensure no installer is running before removing a stale
+lock, fix the reported error and retry. Removal has no backup or rollback; it
+must never report success after a failed delete.
+
+NDD never searches for or removes project documents, source code or project
+settings. It also preserves the downloaded source checkout and unrelated skills.
+For a new 0.3 project there is nothing to disconnect beyond keeping your spec/plan
+files. Legacy manifests, templates, blocks and imports also remain in projects;
+removing them requires a separate explicit request and review of shared rules.

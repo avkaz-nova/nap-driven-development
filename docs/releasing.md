@@ -24,8 +24,10 @@ before publication; never infer the current remote contents from a copied folder
 
 ## First public candidate
 
-0.2.0 replaces the 0.1 prototype. Its migration preserves project documents and
-requires adoption/review for unreceipted machine installs and legacy feature plans.
+0.3.0 makes setup read-only by default, uses only bundled templates and adds clean
+uninstall. Existing 0.1/0.2 project documents are preserved. Unreceipted machine
+installs and legacy feature plans still require adoption/review. Uninstall with
+this release also removes backups retained by 0.2.
 If manual platform/agent gates remain pending, publish only as a clearly marked
 prerelease after explicit maintainer approval, or finish the gates first.
 

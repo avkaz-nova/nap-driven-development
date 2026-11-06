@@ -7,9 +7,11 @@ disable-model-invocation: true
 
 # ndd-plan
 
-Edit only the feature's `plan.md`. Read applicable project instructions, the
-manifest and the feature's spec. Resolve ids/paths without guessing when several
-match. Use the user's language and the project's existing tools.
+Edit only the feature's `plan.md`. Read applicable project instructions and the
+feature's spec. No manifest or copied project templates are required. If legacy
+NDD files exist, follow the [existing-project guidance](../ndd-setup/references/project-state.md).
+Resolve ids/paths without guessing when several match. Use the user's language
+and the project's existing tools.
 
 1. Require spec status `approved` or `in-progress`, and no unresolved
    `[NEEDS CLARIFICATION]`. `in-progress` supports revising an implementation
@@ -17,7 +19,10 @@ match. Use the user's language and the project's existing tools.
    again through `ndd-spec`. A done feature needs an explicitly approved revision.
 2. Explore affected code, tests and configuration. Do not run unfamiliar jobs,
    migrations or verification commands before checking their external effects.
-3. Create/revise the plan from the installed template. Describe the approach,
+3. Use `../ndd-setup/assets/plan.md` relative to this loaded skill's directory.
+   Do not select project templates or copy a template folder into the project.
+   If that bundled asset is missing, report an incomplete installation and stop.
+   Create/revise the plan from it. Describe the approach,
    affected components, relevant interfaces, risks and rollback; omit sections
    that add no value. Respect existing architecture and project rules.
 4. Write ordered tasks with stable ids. Each names its R/AC coverage and a
@@ -45,3 +50,6 @@ within approved scope can be recorded later in Decisions by `ndd-do`.
 
 If the spec is incomplete or contradictory, report the proposed correction and
 stop. Do not edit the spec or rewrite requirements to fit an implementation.
+
+When a diagram clarifies architecture, dependencies or execution flow, use the
+[rounded Unicode diagram style](../ndd-setup/references/diagrams.md).

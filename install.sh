@@ -17,7 +17,7 @@ usage() {
   cat <<'HELP'
 Usage: bash install.sh [--claude | --codex | --all] [options]
   --dry-run           show actions without writing anything
-  --uninstall         remove only the four NDD skills with matching receipts
+  --uninstall         permanently remove owned NDD skills and all NDD install state
   --replace           explicitly back up and replace conflicting/modified skills
   --link              development mode: link skills to this checkout
   --claude-dir PATH   select a custom Claude skills directory
@@ -64,11 +64,6 @@ elif command -v sha256sum >/dev/null 2>&1; then
   hash() { sha256sum | awk '{print $1}'; }
 else fail "SHA-256 utility missing (shasum or sha256sum)."; fi
 exists() { [[ -e "$1" || -L "$1" ]]; }
-has_skills() {
-  local name
-  for name in "${NAMES[@]}"; do exists "$1/$name" && return 0; done
-  return 1
-}
 # Reject symlinks and unusual names instead of following them during ownership checks.
 fingerprint() (
   cd "$1" || exit 1
@@ -82,6 +77,15 @@ fingerprint() (
     else exit 1; fi
   done | hash
 )
+# Ownership is enough for an explicitly requested uninstall, including local edits.
+owned_receipt() {
+  local record="$1" mode
+  [[ -f "$record" && ! -L "$record" ]] || return 1
+  [[ "$(sed -n '1p' "$record")" == ndd-kit-install-v1 ]] || return 1
+  [[ "$(wc -l < "$record" | tr -d '[:space:]')" == 5 ]] || return 1
+  mode=$(sed -n '3p' "$record")
+  [[ "$mode" == copy || "$mode" == link ]]
+}
 # Receipts are data, never sourced as shell code.
 owned_unchanged() {
   local dest="$1" record="$2" format mode source digest
@@ -122,14 +126,15 @@ if [[ $UNINSTALL -eq 0 ]]; then
     [[ ! -L "$src" && -f "$src/SKILL.md" && -f "$src/agents/openai.yaml" ]] || fail "Incomplete or linked distribution: $name"
     fingerprint "$src" >/dev/null || fail "Unsupported source entry in $src"
   done
-  for asset in spec.md plan.md agents-block.md principles.md; do
+  for asset in spec.md plan.md; do
     [[ -f "$KIT_DIR/skills/ndd-setup/assets/$asset" ]] || fail "Missing asset: $asset"
   done
 fi
 # Preflight every selected target before the first write.
 for i in "${!TARGETS[@]}"; do
   target="${TARGETS[$i]%/}"; TARGETS[$i]="$target"
-  check_path "$target"; check_path "$target.ndd-kit"; check_path "$target.ndd-kit/backups"
+  check_path "$target"; check_path "$target.ndd-kit"
+  if [[ $UNINSTALL -eq 0 ]]; then check_path "$target.ndd-kit/backups"; fi
   case "$target/" in "$KIT_DIR/"*) fail "Cannot install inside the distribution." ;; esac
   for name in "${NAMES[@]}"; do
     case "$KIT_DIR/" in "$target/$name/"*|"$target.ndd-kit/"*) fail "Distribution overlaps the installation destination." ;; esac
@@ -142,15 +147,72 @@ for i in "${!TARGETS[@]}"; do
   for name in "${NAMES[@]}"; do
     dest="$target/$name"; record="$target.ndd-kit/$name.receipt"
     [[ ! -L "$record" && ( ! -e "$record" || -f "$record" ) ]] || fail "Invalid receipt: $record"
-    if exists "$dest" && ! owned_unchanged "$dest" "$record"; then
+    if [[ $UNINSTALL -eq 1 ]]; then
+      if exists "$dest"; then
+        owned_receipt "$record" || fail "Cannot establish NDD ownership: $dest. No files removed."
+        echo "  Permanently remove (including local edits): $name"
+      else echo "  Absent: $name"; fi
+    elif exists "$dest" && ! owned_unchanged "$dest" "$record"; then
       [[ $REPLACE -eq 1 ]] || fail "Unowned or modified skill: $dest. Back it up/move it manually, or install with --replace after reviewing --dry-run."
       echo "  BACK UP and replace: $name"
-    elif [[ $UNINSTALL -eq 1 ]]; then
-      if exists "$dest"; then echo "  Remove (retain backup): $name"; else echo "  Absent: $name"; fi
     else echo "  Install $VERSION ($MODE): $name"; fi
   done
+  if [[ $UNINSTALL -eq 1 && -d "$target.ndd-kit" ]]; then
+    echo "  Permanently remove all receipts, backups and staging files: $target.ndd-kit"
+  fi
 done
 [[ $DRY_RUN -eq 0 ]] || { echo 'Dry run: no files changed.'; exit 0; }
+
+# Uninstall deliberately has no backup or rollback. Keep the lock until all
+# contents have been removed, then remove the empty metadata directory.
+if [[ $UNINSTALL -eq 1 ]]; then
+  cleanup_uninstall() {
+    local result=$? path
+    set +e
+    if [[ $result -ne 0 ]]; then
+      echo 'Uninstall incomplete; already deleted files have no backup. Fix the reported error and rerun.' >&2
+    fi
+    if [[ ${#LOCKS[@]} -gt 0 ]]; then
+      for path in "${LOCKS[@]}"; do
+        [[ -z "$path" ]] || rmdir "$path" || result=1
+      done
+    fi
+    return "$result"
+  }
+  trap cleanup_uninstall EXIT
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
+  for target in "${TARGETS[@]}"; do
+    [[ -d "$target.ndd-kit" ]] || continue
+    mkdir "$target.ndd-kit/lock" 2>/dev/null || fail "Install lock exists: $target.ndd-kit/lock. Check for an active/interrupted install."
+    LOCKS+=("$target.ndd-kit/lock")
+  done
+  for target in "${TARGETS[@]}"; do
+    [[ -d "$target.ndd-kit" ]] || continue
+    for name in "${NAMES[@]}"; do
+      dest="$target/$name"
+      if exists "$dest"; then
+        owned_receipt "$target.ndd-kit/$name.receipt" || fail "Ownership changed: $dest"
+        # rm never follows a removed symlink, including nested backup links.
+        rm -rf -- "$dest"
+        echo "  Removed: $name"
+      fi
+    done
+    for entry in "$target.ndd-kit"/* "$target.ndd-kit"/.[!.]* "$target.ndd-kit"/..?*; do
+      exists "$entry" || continue
+      [[ "$entry" == "$target.ndd-kit/lock" ]] && continue
+      rm -rf -- "$entry"
+    done
+    for i in "${!LOCKS[@]}"; do
+      if [[ "${LOCKS[$i]}" == "$target.ndd-kit/lock" ]]; then
+        rmdir "${LOCKS[$i]}"; LOCKS[$i]=''
+      fi
+    done
+    rmdir "$target.ndd-kit"
+  done
+  echo 'NDD skills and install state removed. No backups retained. Project files and source checkout preserved.'
+  exit 0
+fi
 
 cleanup() {
   local exit_status=$? i recovery_failed=0
@@ -181,28 +243,23 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 # Lock all targets before changing any skills. Never clear an existing lock.
 for target in "${TARGETS[@]}"; do
-  if [[ $UNINSTALL -eq 1 ]] && ! has_skills "$target"; then continue; fi
   mkdir -p "$target.ndd-kit"
   mkdir "$target.ndd-kit/lock" 2>/dev/null || fail "Install lock exists: $target.ndd-kit/lock. Check for an active/interrupted install."
   LOCKS+=("$target.ndd-kit/lock")
 done
 for target in "${TARGETS[@]}"; do
-  if [[ $UNINSTALL -eq 1 ]] && ! has_skills "$target"; then continue; fi
   mkdir -p "$target"
   for name in "${NAMES[@]}"; do
     dest="$target/$name"; record="$target.ndd-kit/$name.receipt"
     # Recheck after acquiring the lock; never silently adopt changed destinations.
     if exists "$dest" && ! owned_unchanged "$dest" "$record" && [[ $REPLACE -eq 0 ]]; then fail "Destination changed: $dest"; fi
-    if [[ $UNINSTALL -eq 1 ]] && ! exists "$dest"; then continue; fi
     stage=$(mktemp -d "$target.ndd-kit/stage.XXXXXX"); STAGES+=("$stage")
-    if [[ $UNINSTALL -eq 0 ]]; then
-      src="$KIT_DIR/skills/$name"
-      if [[ "$MODE" == link ]]; then ln -s "$src" "$stage/skill"
-      else cp -R "$src" "$stage/skill"; fi
-      digest=$(fingerprint "$src")
-      [[ "$(fingerprint "$stage/skill")" == "$digest" ]] || fail "Copy verification failed: $name"
-      printf 'ndd-kit-install-v1\n%s\n%s\n%s\n%s\n' "$VERSION" "$MODE" "$src" "$digest" > "$stage/receipt"
-    fi
+    src="$KIT_DIR/skills/$name"
+    if [[ "$MODE" == link ]]; then ln -s "$src" "$stage/skill"
+    else cp -R "$src" "$stage/skill"; fi
+    digest=$(fingerprint "$src")
+    [[ "$(fingerprint "$stage/skill")" == "$digest" ]] || fail "Copy verification failed: $name"
+    printf 'ndd-kit-install-v1\n%s\n%s\n%s\n%s\n' "$VERSION" "$MODE" "$src" "$digest" > "$stage/receipt"
     mkdir -p "$target.ndd-kit/backups"
     backup=$(mktemp -d "$target.ndd-kit/backups/$name.XXXXXX")
     idx=${#DESTS[@]}
@@ -210,18 +267,13 @@ for target in "${TARGETS[@]}"; do
     OLD_MOVED+=(0); RECORD_MOVED+=(0); NEW_INSTALLED+=(0); NEW_RECORDED+=(0)
     if exists "$dest"; then mv "$dest" "$backup/skill"; OLD_MOVED[$idx]=1; fi
     if [[ -f "$record" ]]; then mv "$record" "$backup/receipt"; RECORD_MOVED[$idx]=1; fi
-    if [[ $UNINSTALL -eq 0 ]]; then
-      mv "$stage/skill" "$dest"; NEW_INSTALLED[$idx]=1
-      mv "$stage/receipt" "$record"; NEW_RECORDED[$idx]=1
-    fi
+    mv "$stage/skill" "$dest"; NEW_INSTALLED[$idx]=1
+    mv "$stage/receipt" "$record"; NEW_RECORDED[$idx]=1
     if [[ ${OLD_MOVED[$idx]} -eq 1 || ${RECORD_MOVED[$idx]} -eq 1 ]]; then
       echo "  Saved previous state: $backup"
     else echo "  Installed: $name"; fi
   done
 done
 SUCCESS=1
-if [[ $UNINSTALL -eq 1 ]]; then echo 'NDD skills removed. Project specs and instructions were preserved.'
-else
-  printf '\nInstalled NDD %s. In your project use /ndd-setup (Claude Code) or $ndd-setup (Codex).\n' "$VERSION"
-  echo 'Restart the agent if the skills do not appear.'
-fi
+printf '\nInstalled NDD %s. In your project use /ndd-setup (Claude Code) or $ndd-setup (Codex).\n' "$VERSION"
+echo 'Restart the agent if the skills do not appear.'

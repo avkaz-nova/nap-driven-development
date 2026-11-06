@@ -30,6 +30,9 @@ class DistributionTests(unittest.TestCase):
                 self.assertIn(prefix + 'install.sh', bundle.namelist())
                 self.assertIn(prefix + 'install.ps1', bundle.namelist())
                 self.assertIn(prefix + 'skills/ndd-plan/scripts/spec-digest.ps1', bundle.namelist())
+                for name in ('spec.md', 'plan.md'):
+                    self.assertIn(prefix + 'skills/ndd-setup/assets/' + name, bundle.namelist())
+                self.assertIn(prefix + 'skills/ndd-setup/references/diagrams.md', bundle.namelist())
                 self.assertFalse(any('/.git/' in p or '__pycache__' in p or '/dist/' in p for p in bundle.namelist()))
                 self.assertTrue(bundle.getinfo(prefix + 'install.sh').external_attr >> 16 & 0o100)
 
@@ -59,7 +62,7 @@ class DistributionTests(unittest.TestCase):
             self.assertIn('allow_implicit_invocation: false', policy)
             for reference in re.findall(r'\]\(([^)]+)\)', text):
                 self.assertTrue((folder / reference).is_file(), reference)
-        for name in ('spec.md', 'plan.md', 'agents-block.md', 'principles.md'):
+        for name in ('spec.md', 'plan.md'):
             self.assertTrue((ROOT / 'skills/ndd-setup/assets' / name).is_file())
 
 

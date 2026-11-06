@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.0 — unreleased
+
+- Setup is now a read-only readiness check by default: no instruction blocks,
+  imports, manifest, project templates or empty specs directory.
+- Removed the redundant setup dry-run option; installer dry-run remains available.
+- Spec and plan use only bundled templates; legacy project files are preserved.
+- Uninstall permanently removes owned skills (including edits), receipts, staging
+  files and all old backups. Project files and source checkouts remain untouched.
+- Shared rounded Unicode diagram guidance for all four skills.
+- Regression coverage for clean removal, old leftover state, nested links, dry-run
+  and interrupted deletion. Install/update backup and rollback are unchanged.
+
 ## 0.2.0 — unreleased
 
 - Safe installers for the four named skills: ownership receipts, full-target
