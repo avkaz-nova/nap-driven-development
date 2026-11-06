@@ -1,5 +1,7 @@
 # NDD — Nap-Driven Development
 
+![Nap-Driven Development — a developer and cat nap while two robot assistants plan and code](docs/assets/nap-driven-development.png)
+
 NDD is a lightweight spec-driven workflow for **Claude Code and Codex**, on **Mac
 and Windows**. It turns an idea or bug report into a clear specification, a practical
 plan, and small implementation tasks with checks for the result.
