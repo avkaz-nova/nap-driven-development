@@ -7,6 +7,11 @@ disable-model-invocation: true
 
 # ndd-spec
 
+Respect applicable global, project and nested instructions (`AGENTS.md`,
+`CLAUDE.md` and scoped rules), following the host's instruction precedence.
+If an unresolved conflict blocks the requested work, explain the specific
+contradiction and pause the affected work; do not silently bypass or rewrite rules.
+
 Create or revise `specs/PREFIX-NNN-feature-slug/spec.md`, or an explicitly requested
 project-relative feature path. Until the user chooses to continue to planning,
 this phase may edit only that specification and create its containing folder.

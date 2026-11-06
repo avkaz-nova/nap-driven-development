@@ -7,6 +7,11 @@ disable-model-invocation: true
 
 # ndd-review
 
+Respect applicable global, project and nested instructions (`AGENTS.md`,
+`CLAUDE.md` and scoped rules), following the host's instruction precedence.
+If an unresolved conflict blocks the requested work, explain the specific
+contradiction and pause the affected work; do not silently bypass or rewrite rules.
+
 Review in the user's language, respecting applicable project instructions.
 Review is optional and is allowed for draft, in-progress and done features.
 It never grants approval or replaces verification in `ndd-do`.

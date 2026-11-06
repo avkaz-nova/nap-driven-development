@@ -6,6 +6,11 @@ disable-model-invocation: true
 
 # ndd-setup
 
+Respect applicable global, project and nested instructions (`AGENTS.md`,
+`CLAUDE.md` and scoped rules), following the host's instruction precedence.
+If an unresolved conflict blocks the requested work, explain the specific
+contradiction and pause the affected work; do not silently bypass or rewrite rules.
+
 Check readiness for the explicitly invoked NDD workflow and confirm a personal
 feature prefix. Inspection is read-only; after confirmation, save the prefix
 in local Git config and register the project in the shared NDD registry. Do not create instruction blocks, imports, project templates,

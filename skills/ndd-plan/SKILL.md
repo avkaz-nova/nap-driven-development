@@ -7,6 +7,11 @@ disable-model-invocation: true
 
 # ndd-plan
 
+Respect applicable global, project and nested instructions (`AGENTS.md`,
+`CLAUDE.md` and scoped rules), following the host's instruction precedence.
+If an unresolved conflict blocks the requested work, explain the specific
+contradiction and pause the affected work; do not silently bypass or rewrite rules.
+
 Edit only the feature's `plan.md`. Read applicable project instructions and the
 feature's spec. No manifest or copied project templates are required. If legacy
 NDD files exist, follow the [existing-project guidance](../ndd-setup/references/project-state.md).

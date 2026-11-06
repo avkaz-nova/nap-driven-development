@@ -7,6 +7,11 @@ disable-model-invocation: true
 
 # ndd-do
 
+Respect applicable global, project and nested instructions (`AGENTS.md`,
+`CLAUDE.md` and scoped rules), following the host's instruction precedence.
+If an unresolved conflict blocks the requested work, explain the specific
+contradiction and pause the affected work; do not silently bypass or rewrite rules.
+
 By default, complete all remaining tasks in the approved plan in order, including
 final verification. An explicit task id (for example `001 T2`) limits this invocation
 to that task; do not silently execute its unfinished prerequisites. Honor an
