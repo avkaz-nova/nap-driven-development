@@ -40,8 +40,11 @@ check, use a disposable project and record the agent version, OS and actual resu
    check that the prefix remains session-only.
 2. Create a small spec, approve it, create a plan and approve it. Confirm that an
    unapproved draft does not allow implementation.
-3. Implement a task. Change the spec body and confirm that the stale plan stops
-   implementation until reviewed. Check that a failed verification leaves work incomplete.
+3. With two independent unchecked tasks, call `ndd-do <id>` and confirm it
+   continues through both and final checks. In a fresh fixture, call
+   `ndd-do <id> T2`: only T2 runs; missing prerequisites are reported.
+   Change the spec body and confirm the stale plan stops implementation until
+   reviewed. A failed verification must leave affected work incomplete.
 4. Resume in a new session or the other agent. Confirm that progress is preserved
    and completion requires the final acceptance checks.
 
@@ -49,3 +52,36 @@ Use disposable installation paths for manual uninstall checks too. Preview first
 verify that single-agent removal keeps shared settings and full removal cleans
 registered prefixes while skipping failed entries. Check source-clone removal
 on the target OS, including open-file failures on Windows.
+
+## Help and review acceptance
+
+Use the [help/review scenarios](help-review-validation.md) on macOS and Windows
+in both Claude Code and Codex. Record observations separately from automated
+checks. Distribution tests verify metadata/resources; installer tests also cover
+a synthetic four-skill 0.3.0 layout with genuine installer-generated receipts,
+upgrade/reinstall to six skills, new resource failures and foreign-name conflicts.
+They do not prove that either agent follows the new review instructions.
+
+## Compact workflow checks
+
+In disposable projects, verify these observations in both agents; automated text
+checks cannot prove them:
+
+- A small CSV fix produces an AC-only spec and a short plan with AC references in
+  tasks, no duplicate requirements/edge-case lists or coverage table. Length
+  guidelines are ceilings, not padding targets; material risks are not omitted.
+- Both approvals remain necessary. Review accepts the compact shape and the
+  existing legacy example without inventing structural defects.
+- Default execution continues between tasks; an explicit task stops after it.
+  A scope change, stale digest, missing prerequisite or separate authorization
+  still stops dependent work. A failed required check cannot yield `done`.
+- Context already established is reused, while changed files/assumptions are
+  rechecked. Passing checks are reused only for unchanged relevant inputs;
+  required final checks still run. Record actual commands to check repetition.
+- Spec/plan are shown once for approval. Results contain concise evidence and
+  limitations rather than repeated summaries. Resume preserves earlier progress.
+
+The example consistency test covers both compact task-based AC references and
+legacy coverage tables, including real spec-body checksums. Native agent behavior
+and latency improvements require observations; shorter instructions alone do not
+prove either.

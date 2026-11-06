@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.4.0 — 2026-11-06 (public preview)
+
+- Make new specs/plans compact by default: AC-only requirements, task-level
+  coverage, optional sections and concise verification records. Existing R/AC
+  documents remain supported without migration.
+- Make `ndd-do <id>` complete the remaining approved plan; an explicit task id
+  limits execution to that task. Preserve approvals, digest and verification gates.
+- Reuse established context and unchanged passing checks to avoid repeated work;
+  retain focused checks and required final verification.
+- Add `ndd-help`: short command reference, installed version, workflow and IDs,
+  available before setup and outside Git without writing project files.
+- Add optional `ndd-review`: automatic stage selection or explicit spec/plan/code
+  review, with confirmed latest-feature selection when no ID is given.
+- Offer saving a review only after analysis; extend a unified checklist with stable
+  finding IDs, preserved comments and evidence for fixed findings.
+- Install and remove six skills for either agent; support upgrading a four-skill
+  installation while retaining ownership, conflict and rollback protections.
+- Add packaging/migration checks and manual agent acceptance scenarios.
+
 ## 0.3.0 — 2026-11-06 (public preview)
 
 First public GitHub release. Automated installer and packaging checks cover macOS,

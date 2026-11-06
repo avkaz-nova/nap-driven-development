@@ -33,6 +33,11 @@ class DistributionTests(unittest.TestCase):
                 for name in ('spec.md', 'plan.md'):
                     self.assertIn(prefix + 'skills/ndd-setup/assets/' + name, bundle.namelist())
                 self.assertIn(prefix + 'skills/ndd-setup/references/diagrams.md', bundle.namelist())
+                for name in ('SKILL.md', 'agents/openai.yaml'):
+                    self.assertIn(prefix + 'skills/ndd-help/' + name, bundle.namelist())
+                for name in ('SKILL.md', 'agents/openai.yaml', 'assets/review.md',
+                             'references/report-updates.md'):
+                    self.assertIn(prefix + 'skills/ndd-review/' + name, bundle.namelist())
                 banner = 'docs/assets/nap-driven-development.png'
                 self.assertEqual(bundle.read(prefix + banner), (ROOT / banner).read_bytes())
                 self.assertFalse(any('/.git/' in p or '__pycache__' in p or '/dist/' in p for p in bundle.namelist()))
@@ -74,12 +79,17 @@ class DistributionTests(unittest.TestCase):
             expected = hashlib.sha256(body.encode('utf-8')).hexdigest()
             plan = (folder / 'plan.md').read_text(encoding='utf-8')
             self.assertIn(f'spec_digest: {expected}', plan, folder.name)
-            acs = set(re.findall(r'^- (AC\d+) ', spec, re.MULTILINE))
+            acs = set(re.findall(r'^- (AC\d+)(?=[: ])', spec, re.MULTILINE))
+            tasks = re.findall(r'^- \[[ x]\] T\d+ \(([^)]+)\):.*$', plan, re.MULTILINE)
+            task_coverage = set(re.findall(r'\bAC\d+\b', ' '.join(tasks)))
+            self.assertEqual(acs, task_coverage, folder.name)
+            # Legacy plans may also have a table; compact plans need only tasks.
             coverage = set(re.findall(r'^\| (AC\d+) \|', plan, re.MULTILINE))
-            self.assertEqual(acs, coverage, folder.name)
+            if coverage:
+                self.assertEqual(acs, coverage, folder.name)
 
     def test_skill_metadata_and_bundled_resources(self) -> None:
-        names = ('ndd-setup', 'ndd-spec', 'ndd-plan', 'ndd-do')
+        names = ('ndd-setup', 'ndd-spec', 'ndd-plan', 'ndd-do', 'ndd-help', 'ndd-review')
         for name in names:
             folder = ROOT / 'skills' / name
             text = (folder / 'SKILL.md').read_text(encoding='utf-8')

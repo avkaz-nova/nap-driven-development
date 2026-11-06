@@ -20,30 +20,36 @@ Use the user's language and the project's existing tools.
    `[NEEDS CLARIFICATION]`. `in-progress` supports revising an implementation
    plan without resetting the agreed behaviour. A changed spec must be approved
    again through `ndd-spec`. A done feature needs an explicitly approved revision.
-2. Explore affected code, tests and configuration. Do not run unfamiliar jobs,
+2. Reuse the spec-phase findings, then inspect affected implementation, tests
+   and configuration needed for concrete tasks. Recheck uncertain or changed
+   assumptions; do not repeat a broad project scan. Do not run unfamiliar jobs,
    migrations or verification commands before checking their external effects.
 3. Use `../ndd-setup/assets/plan.md` relative to this loaded skill's directory.
    Do not select project templates or copy a template folder into the project.
    If that bundled asset is missing, report an incomplete installation and stop.
-   Create/revise the plan from it. Describe the approach,
-   affected components, relevant interfaces, risks and rollback; omit sections
-   that add no value. Respect existing architecture and project rules.
-4. Write ordered tasks with stable ids. Each names its R/AC coverage and a
-   concrete verification step supported on the project's operating systems.
-   Include prerequisites when order alone is insufficient; do not use `[P]`.
-   A task should be a small, coherent change. Tests precede or accompany code
-   where useful; docs/config changes can use other meaningful checks.
-5. Map every AC to tasks and a final verification method. Include integration,
-   error paths and any acceptance needing human observation. Distinguish
-   deferred business measurements from checks required before completion.
+   Create/revise the plan from it. For ordinary tasks aim for 100–250 words or
+   fewer, expanding only for concrete complexity or risk. Respect project rules.
+   Use a short approach and an execution checklist. Mention files/contracts in
+   tasks instead of duplicating them in a components section. Include risks,
+   rollback or decisions only when there is something material to explain.
+4. Write ordered tasks with stable T ids, each referencing the AC ids it covers
+   and a concrete verification command or observation. Include prerequisites
+   only when ordering is insufficient. Keep related implementation and tests
+   together; do not split trivial steps into separate tasks. Existing R/AC
+   documents remain supported without migration or renumbering.
+5. Ensure every AC has a task and a way to verify the assembled feature. Put
+   this coverage in the tasks; do not add a duplicate coverage table. Add a final
+   integration check only where task checks are insufficient. Include required
+   project checks and distinguish release acceptance from later measurements.
 6. Compute `spec_digest` using this skill's read-only helper:
    - macOS/Linux: `bash <this-skill>/scripts/spec-digest.sh <spec-path>`
    - Windows: `powershell -NoProfile -File <this-skill>/scripts/spec-digest.ps1 -Path <spec-path>`
    Quote paths. Use `pwsh` if that is the installed PowerShell. Stop on failure;
    never make up a checksum. The helpers hash the Markdown body as UTF-8/LF,
    ignoring BOM, frontmatter and trailing blank lines, with one final LF.
-7. Set the plan `status: draft`, show the approach, tasks and risks, and ask for
-   review. On explicit approval of this version, set `status: approved`.
+7. Set the plan `status: draft`, show the short plan once (or changed parts),
+   without repeating it in a summary, and ask for review. On explicit approval of
+   this version, set `status: approved`.
    A chat approval is enough; the agent records it. Next: `ndd-do <feature id>`.
 
 If an existing plan is revised, preserve completed tasks and verification

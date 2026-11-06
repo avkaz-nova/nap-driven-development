@@ -16,7 +16,7 @@ from unittest.mock import patch
 from process_environment import child_environment
 
 REPO = Path(__file__).resolve().parents[1]
-NAMES = ('ndd-setup', 'ndd-spec', 'ndd-plan', 'ndd-do')
+NAMES = ('ndd-setup', 'ndd-spec', 'ndd-plan', 'ndd-do', 'ndd-help', 'ndd-review')
 WINDOWS = os.name == 'nt'
 POWERSHELL = WINDOWS or bool(os.environ.get('NDD_TEST_POWERSHELL'))
 
@@ -346,13 +346,67 @@ function Remove-Item {
         self.assertEqual(snapshot(self.target), installed)
         self.assertEqual(snapshot(self.distribution), source_before)
 
+    def test_upgrade_four_skill_030_installation(self) -> None:
+        # Reproduce the previous four-skill layout using the unchanged receipt
+        # protocol. No network/history dependency and no hand-forged receipts.
+        originals = {name: (self.distribution / name).read_bytes()
+                     for name in ('install.sh', 'install.ps1', 'skills/ndd-setup/VERSION')}
+        for name in ('install.sh', 'install.ps1'):
+            path = self.distribution / name
+            content = originals[name].replace(b' ndd-help ndd-review)', b')')
+            content = content.replace(b", 'ndd-help', 'ndd-review')", b")")
+            path.write_bytes(content)
+        (self.distribution / 'skills/ndd-setup/VERSION').write_text('0.3.0\n')
+        self.run_installer('--codex-dir', str(self.other))
+        for target in (self.target, self.other):
+            self.assertEqual({p.name for p in target.iterdir()}, set(NAMES[:4]))
+            state = Path(str(target) + '.ndd-kit')
+            self.assertEqual({p.stem for p in state.glob('*.receipt')}, set(NAMES[:4]))
+        for name, content in originals.items():
+            (self.distribution / name).write_bytes(content)
+        self.run_installer('--codex-dir', str(self.other))
+        self.run_installer('--codex-dir', str(self.other))
+        for target in (self.target, self.other):
+            for name in NAMES:
+                self.assertEqual(snapshot(target / name), snapshot(self.distribution / 'skills' / name))
+                self.assertTrue((Path(str(target) + '.ndd-kit') / f'{name}.receipt').is_file())
+        other_before = snapshot(self.other)
+        self.run_installer('--uninstall', '--keep-source')
+        self.assertEqual(snapshot(self.other), other_before)
+        self.assertEqual(list(self.target.iterdir()), [])
+        self.run_installer('--uninstall', '--codex-dir', str(self.other), '--keep-source')
+        self.assertEqual(list(self.other.iterdir()), [])
+
+    def test_new_skill_conflicts_and_resources_fail_before_writes(self) -> None:
+        for name in ('ndd-help', 'ndd-review'):
+            with self.subTest(conflict=name):
+                foreign = self.other / name
+                foreign.mkdir(parents=True)
+                (foreign / 'user.txt').write_text('keep me')
+                before = snapshot(self.root)
+                self.run_installer('--codex-dir', str(self.other), success=False)
+                self.assertEqual(snapshot(self.root), before)
+                shutil.rmtree(foreign)
+        for resource in ('ndd-help/SKILL.md', 'ndd-review/agents/openai.yaml',
+                         'ndd-review/assets/review.md', 'ndd-review/references/report-updates.md'):
+            with self.subTest(missing=resource):
+                path = self.distribution / 'skills' / resource
+                original = path.read_bytes()
+                path.unlink()
+                before = snapshot(self.root)
+                self.run_installer('--codex-dir', str(self.other), success=False)
+                self.assertEqual(snapshot(self.root), before)
+                path.write_bytes(original)
+
     def test_both_targets(self) -> None:
         self.run_installer('--codex-dir', str(self.other))
         self.assertEqual(snapshot(self.target), snapshot(self.other))
 
     def test_dry_run_has_no_writes(self) -> None:
         before = snapshot(self.root)
-        self.run_installer('--dry-run')
+        result = self.run_installer('--dry-run')
+        for name in ('ndd-help', 'ndd-review'):
+            self.assertIn(name, result.stdout)
         self.assertEqual(snapshot(self.root), before)
 
     def test_uninstall_absent_kit_has_no_writes(self) -> None:
@@ -628,6 +682,8 @@ function Copy-Item {
         self.assertFalse(self.state.exists())
 
     def test_bundled_templates_work_without_source_or_project_setup(self) -> None:
+        expected = {name: (self.distribution / 'skills/ndd-setup/assets' / name).read_bytes()
+                    for name in ('spec.md', 'plan.md')}
         self.run_installer()
         shutil.rmtree(self.distribution / 'skills')
         project = self.root / 'work-project'
@@ -637,7 +693,7 @@ function Copy-Item {
         for skill, template in (('ndd-spec', 'spec.md'), ('ndd-plan', 'plan.md')):
             asset = self.target / skill / '../ndd-setup/assets' / template
             self.assertTrue(asset.is_file())
-            self.assertIn('Acceptance', asset.read_text(encoding='utf-8'))
+            self.assertEqual(asset.read_bytes(), expected[template])
         self.assertEqual(snapshot(project), before)
         self.run_installer('--uninstall')
         self.assertFalse(self.state.exists())

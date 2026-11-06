@@ -1,21 +1,24 @@
 ---
 name: ndd-do
-description: Implement and verify the next task in an approved, current NDD plan. Invoke explicitly with ndd-do; do not start from an unapproved or stale plan.
+description: Implement and verify all remaining tasks in an approved, current NDD plan, or one explicitly selected task. Invoke explicitly with ndd-do; do not start from an unapproved or stale plan.
 argument-hint: "<feature id | path to plan.md> [task id]"
 disable-model-invocation: true
 ---
 
 # ndd-do
 
-Implement one task per invocation by default. If the user explicitly requests
-several tasks, perform them in order, checking the same gates before each.
+By default, complete all remaining tasks in the approved plan in order, including
+final verification. An explicit task id (for example `001 T2`) limits this invocation
+to that task; do not silently execute its unfinished prerequisites. Honor an
+explicit smaller scope or stopping point. Do not pause merely because a task ended.
 A fresh session is optional; spec, plan and recorded evidence carry the context.
 
 ## Before editing
 
-1. Read applicable instructions, the spec, plan, relevant code and tests, and
-   Git status if available. Preserve unrelated changes. A manifest or project
-   templates are not required. If legacy NDD files exist, follow the
+1. Read applicable instructions, the spec, plan and Git status if available.
+   Reuse earlier findings; inspect code/tests relevant to the selected work and
+   recheck changed files or uncertain assumptions instead of repeating broad scans.
+   Preserve unrelated changes. A manifest or project templates are not required. If legacy NDD files exist, follow the
    [existing-project guidance](../ndd-setup/references/project-state.md).
    Resolve the feature with the shared
    [prefix and identifier rules](../ndd-setup/references/feature-ids.md): `001`
@@ -35,9 +38,16 @@ A fresh session is optional; spec, plan and recorded evidence carry the context.
    a bare `ndd-do 001` is not retrospective approval.
    If all tasks are checked, perform any outstanding final acceptance checks
    instead of inventing another task.
-4. Select the requested task or first unchecked one. Respect prerequisites;
-   don't repeat a checked task without an explicit reason. State its R/AC scope.
+4. Start with the requested task or first unchecked one. Respect prerequisites;
+   don't repeat a checked task without an explicit reason. State its AC scope
+   (and R ids for legacy documents).
    Inspect verification commands for external effects before execution.
+   Continue through remaining tasks without new approval within the approved
+   scope. Before each task confirm the gates still hold; reuse the digest result
+   only while the spec body is unchanged in this invocation. Re-read/recompute
+   when documents change or work resumes in a new invocation. Stop for a genuine
+   blocker, changed scope/approach, invalid approval/digest or an action requiring
+   separate authorization, not for routine transitions.
 
 ## Implement and verify
 
@@ -47,14 +57,20 @@ A fresh session is optional; spec, plan and recorded evidence carry the context.
   a failing test for a documentation edit or already-covered behaviour.
 - Implement the smallest coherent change. Keep existing architecture and
   dependencies unless an approved requirement justifies a change.
-- Run task verification, related tests and required project checks. Do not
-  weaken checks, hide unexpected failures or fix unrelated failures to go green.
+- Run focused checks during implementation and required project checks at the
+  end. Reuse passing results while relevant code, dependencies, configuration
+  and test inputs remain unchanged; rerun affected checks after relevant changes.
+  Do not rerun an identical suite just to close another checkbox. Never skip
+  required final checks, weaken tests or hide failures. Fix failures within scope;
+  report unrelated blockers without changing unrelated code.
 - On a behavioural contradiction, stop and propose a spec correction. Once
   approved, revise the spec and review the affected plan before continuing.
   Small implementation details within approved scope can go in Decisions.
   Changes to approach, scope, dependencies or external effects require review.
 - Check off a task only when its required checks pass. Record a concise result
   in the plan: task/AC, command or observation, outcome and relevant limitation.
+  Use one short entry per check or group of tasks; update evidence without
+  appending repetitive logs. Preserve useful failure details and prior results.
   If blocked, leave it unchecked and record what remains. Set the spec to
   `in-progress` when implementation starts.
 - When all tasks are complete, verify every AC against the assembled feature,
@@ -62,7 +78,8 @@ A fresh session is optional; spec, plan and recorded evidence carry the context.
   Mark the spec `done` only when that evidence is recorded. Missing tools,
   unperformed manual checks or pre-existing failures are not passing results.
 
-Report changes, verification, remaining blockers and a suggested commit message.
+Report briefly what changed, what was verified and what remains unresolved,
+with a suggested commit message. Do not repeat the spec/plan or narrate routine steps.
 Do not commit, push, deploy, change shared data or run production workflows
 unless separately authorized. Recommend committing code and its spec/plan
 updates together. Stop after the requested task(s).

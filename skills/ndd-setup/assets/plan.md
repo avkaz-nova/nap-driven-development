@@ -7,32 +7,18 @@ spec_digest: <SHA-256 from the ndd-plan spec-digest helper>
 
 Spec: ./spec.md
 
-## Approach
-<!-- Key choice and rationale; relevant alternatives, not an exhaustive survey. -->
-
-## Affected components and contracts
-<!-- Files/modules and any changed API, schema or compatibility contract. -->
-
-## Risks and rollback
-<!-- Omit when not relevant. -->
+<Short approach and key implementation choice.>
 
 ## Tasks
-<!-- Ordered, small coherent changes. Explicit prerequisites where needed.
-     Each task has R/AC coverage and a real verification command/observation. -->
-- [ ] T1 (R1, AC1): ... — verify: `...`
+<!-- Each AC needs task coverage and a concrete check. Include files where useful.
+     Add a final integration check only when task checks are insufficient.
+     Keep required project checks; no duplicate coverage table. -->
+- [ ] T1 (AC1): <Change and related tests.> — verify: `<command or observation>`
 
-## Acceptance coverage
-<!-- Every AC maps to tasks AND a way to verify the assembled feature. -->
-| AC | Tasks | Final verification |
-|---|---|---|
-| AC1 | T1 | ... |
+## Results
+<!-- After implementation, record concise task/AC, check, result and limitations.
+     Do not claim unperformed checks passed. -->
 
-## Verification results
-<!-- Task/AC, command or observation, result and limitation. No secrets or raw data.
-     Unperformed, blocked or failed checks remain explicitly outstanding. -->
-- None yet.
-
-## Decisions
-<!-- Small implementation changes within approved scope, with reasons.
-     Changes to behaviour/approach require review and renewed approval. -->
-- None yet.
+<!-- Aim for 100–250 words or fewer for ordinary tasks. Add risks, rollback,
+     dependencies or decisions only when material. Preserve useful existing
+     progress/evidence; changes of approach or scope need renewed approval. -->

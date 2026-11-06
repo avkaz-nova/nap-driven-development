@@ -16,7 +16,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $KitDir = $PSScriptRoot
 if ($KitDir -match '[\r\n\t]') { throw 'The distribution path must not contain tabs or line breaks.' }
-$Names = @('ndd-setup', 'ndd-spec', 'ndd-plan', 'ndd-do')
+$Names = @('ndd-setup', 'ndd-spec', 'ndd-plan', 'ndd-do', 'ndd-help', 'ndd-review')
 $UserDirectory = [Environment]::GetFolderPath('UserProfile')
 function Clear-RegisteredProjects([switch]$Preview) {
     $helper = Join-Path $KitDir 'skills/ndd-setup/scripts/project-registry.ps1'
@@ -185,6 +185,9 @@ if (-not $Uninstall) {
     }
     foreach ($asset in @('spec.md', 'plan.md')) {
         if (-not (Test-Path -LiteralPath (Join-Path $KitDir "skills\ndd-setup\assets\$asset") -PathType Leaf)) { throw "Missing asset: $asset" }
+    }
+    foreach ($resource in @('assets/review.md', 'references/report-updates.md')) {
+        if (-not (Test-Path -LiteralPath (Join-Path $KitDir "skills/ndd-review/$resource") -PathType Leaf)) { throw "Missing review resource: $resource" }
     }
 }
 foreach ($target in $Targets) {

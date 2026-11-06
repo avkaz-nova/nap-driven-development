@@ -13,8 +13,9 @@ a manifest or an empty specs folder. The first `ndd-spec` creates task documents
 Invoke `ndd-setup` without flags.
 
 This skill contains `VERSION` and the standard `assets/spec.md` and `assets/plan.md`.
-The other three NDD skills are siblings. Use this loaded kit's actual location;
-never silently combine resources from different installations. These installed
+The other five NDD skills are siblings. Review also bundles its own report
+template; help provides a short reference without requiring setup. Use this loaded
+kit's actual location; never silently combine resources from different installations. Bundled
 assets are the only templates: do not copy them into projects or select custom
 project templates. If resources are missing, report the incomplete installation.
 

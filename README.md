@@ -28,7 +28,7 @@ tasks and checks. You approve both before the agent changes code, then review th
 verification results. See the [example spec](examples/002-csv-export/spec.md) and
 [plan](examples/002-csv-export/plan.md)—illustrative documents, not a completed demo.
 
-[Download v0.3.0 (public preview)](https://github.com/avkaz/nap-driven-development/releases/tag/v0.3.0)
+[Download v0.4.0 (public preview)](https://github.com/avkaz/nap-driven-development/releases/tag/v0.4.0)
 or install with Git below.
 
 ## Install
@@ -198,7 +198,7 @@ both agents; it does not install the agents themselves.
 <details>
 <summary>No Git? Download a ZIP instead</summary>
 
-1. Open the [v0.3.0 release](https://github.com/avkaz/nap-driven-development/releases/tag/v0.3.0) and download **ndd-kit-0.3.0.zip** from **Assets**.
+1. Open the [v0.4.0 release](https://github.com/avkaz/nap-driven-development/releases/tag/v0.4.0) and download **ndd-kit-0.4.0.zip** from **Assets**.
 2. Extract the ZIP and open Terminal or PowerShell in the extracted folder.
 3. Run **step 3** from the Mac or Windows instructions above.
 
@@ -214,10 +214,28 @@ the skill picker.
 |---|---|---|
 | Check project and choose prefix | `/ndd-setup` | `$ndd-setup` |
 | Describe a task | `/ndd-spec Fix CSV export` | `$ndd-spec Fix CSV export` |
-| Review the spec | Say “I approve this spec” when ready | Same |
+| Approve the spec | Say “I approve this spec” when ready | Same |
 | Create a plan | `/ndd-plan 001` | `$ndd-plan 001` |
-| Review the plan | Say “I approve this plan” when ready | Same |
-| Implement the next task | `/ndd-do 001` | `$ndd-do 001` |
+| Approve the plan | Say “I approve this plan” when ready | Same |
+| Complete the approved plan | `/ndd-do 001` | `$ndd-do 001` |
+| Show a short reference, even before setup | `/ndd-help` | `$ndd-help` |
+| Review a task (optional) | `/ndd-review 001` | `$ndd-review 001` |
+
+New documents are compact by default: a goal and acceptance checklist for the
+spec, then a short approach and tasks with checks for the plan. Extra detail is
+added only when the change needs it. Existing longer documents still work.
+
+`ndd-do 001` completes all remaining approved tasks and verification. It stops
+for blockers, scope changes or actions needing separate authorization. To work
+on just one task, use `ndd-do 001 T2`.
+
+`ndd-review 001` checks the latest available stage: spec, plan against spec, or
+implementation against both. You can choose a stage with `ndd-review 001 spec`
+(or `ndd-review spec 001`). Without an ID, it proposes your highest-numbered task
+and asks for confirmation. Review reports findings in chat without editing code
+or running tests, then offers to save `review.md`. An existing report can be
+replaced or extended as one checklist, retaining fixed findings and comments.
+Review never replaces your approval of the spec/plan or implementation checks.
 
 Setup suggests a personal prefix from your Git name, such as `ak`. Accept it or
 choose your own. After your confirmation, it saves `ndd.prefix` in the existing
@@ -227,7 +245,7 @@ Setup also records the project and prefix in `~/.ndd/projects`, shared by Claude
 and Codex, so full uninstall can remove the recorded Git setting later.
 
 `ndd-plan 001` then means your `ak-001` feature. To select a teammate's feature,
-use its prefix, e.g. `ndd-plan iv-001`. Repeat `ndd-do` to continue through the plan.
+use its prefix, e.g. `ndd-plan iv-001`.
 Choose different prefixes within the team; ambiguous matches always need clarification.
 
 **Setup preserves your project instructions.** It checks readiness and reports conflicts.
@@ -241,7 +259,8 @@ your-project/
 └── specs/
     └── ak-001-fix-csv-export/
         ├── spec.md
-        └── plan.md
+        ├── plan.md
+        └── review.md  (optional)
 ```
 
 These are ordinary project files: commit them with the code if you want to share
@@ -352,7 +371,8 @@ and their enclosing `.agents` / `.claude` folders are not removed.
 
 Removes:
 
-- The four owned skill folders — `ndd-setup`, `ndd-spec`, `ndd-plan`, `ndd-do` —
+- The six owned skill folders — `ndd-setup`, `ndd-spec`, `ndd-plan`, `ndd-do`,
+  `ndd-help`, `ndd-review` —
   from `~/.agents/skills`.
 - `~/.agents/skills.ndd-kit`, including installation receipts, backups and leftover
   staging files.
@@ -395,7 +415,8 @@ powershell -NoProfile -File .\install.ps1 -Codex -Uninstall
 
 Removes:
 
-- The four owned skill folders — `ndd-setup`, `ndd-spec`, `ndd-plan`, `ndd-do` —
+- The six owned skill folders — `ndd-setup`, `ndd-spec`, `ndd-plan`, `ndd-do`,
+  `ndd-help`, `ndd-review` —
   from `~/.claude/skills`.
 - `~/.claude/skills.ndd-kit`, including installation receipts, backups and leftover
   staging files.
@@ -438,7 +459,7 @@ powershell -NoProfile -File .\install.ps1 -Claude -Uninstall
 
 Removes:
 
-- The four owned NDD skill folders from both `~/.agents/skills` and
+- The six owned NDD skill folders from both `~/.agents/skills` and
   `~/.claude/skills`, including local edits.
 - Both installation metadata folders, `~/.agents/skills.ndd-kit` and
   `~/.claude/skills.ndd-kit`, including all receipts, backups and leftover staging files.

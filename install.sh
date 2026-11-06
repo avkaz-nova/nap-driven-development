@@ -4,7 +4,7 @@ set -euo pipefail
 
 KIT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 [[ "$KIT_DIR" != *$'\n'* && "$KIT_DIR" != *$'\t'* ]] || { echo 'Distribution path contains tabs or line breaks.' >&2; exit 1; }
-NAMES=(ndd-setup ndd-spec ndd-plan ndd-do)
+NAMES=(ndd-setup ndd-spec ndd-plan ndd-do ndd-help ndd-review)
 CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills"
 CODEX_DIR="$HOME/.agents/skills"
 WANT_CLAUDE=0 WANT_CODEX=0 UNINSTALL=0 DRY_RUN=0 REPLACE=0 KEEP_SOURCE=0
@@ -182,6 +182,9 @@ if [[ $UNINSTALL -eq 0 ]]; then
   done
   for asset in spec.md plan.md; do
     [[ -f "$KIT_DIR/skills/ndd-setup/assets/$asset" ]] || fail "Missing asset: $asset"
+  done
+  for resource in assets/review.md references/report-updates.md; do
+    [[ -f "$KIT_DIR/skills/ndd-review/$resource" ]] || fail "Missing review resource: $resource"
   done
 fi
 # Preflight every selected target before the first write.

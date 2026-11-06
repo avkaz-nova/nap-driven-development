@@ -7,29 +7,15 @@ created: 2026-11-06
 
 # Export a task list to CSV
 
-This is an illustrative reviewed specification, not a completed implementation.
-
-## Problem and users
-A user wants to open their task list in a spreadsheet without copying each row.
-
-## Requirements
-- R1: Export the currently visible tasks, in displayed order, with columns
-  `title,status`. Use UTF-8 CSV; quote commas, quotes and line breaks correctly.
-- R2: Exporting an empty view produces the header only.
-- R3: Export must not change tasks or their order in the application.
-
-## Non-goals
-Import, background scheduling, additional columns and spreadsheet styling.
-
-## Edge cases
-Empty view, Unicode titles, commas, double quotes and multiline titles.
+Let users open their visible task list in a spreadsheet without copying rows.
+This is an illustrative specification, not a completed implementation.
 
 ## Acceptance criteria
-- AC1 (R1): A CSV reader reconstructs the exact visible titles and statuses in
-  order, including Unicode, comma, quote and multiline fixtures.
-- AC2 (R2): An empty view produces a CSV with `title,status` and no data rows.
-- AC3 (R3): Task data and displayed order are unchanged after successful export
-  and after the user cancels saving the file.
+- AC1: Export visible tasks in displayed order as UTF-8 CSV with `title,status`
+  columns. A CSV reader reconstructs exact values for Unicode titles and fields
+  containing commas, quotes or line breaks.
+- AC2: An empty view produces the header only, with no data rows.
+- AC3: Task data and displayed order stay unchanged after export or save cancellation.
 
-## Open questions
-None.
+## Out of scope
+Import, scheduling, additional columns and spreadsheet styling.

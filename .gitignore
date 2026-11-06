@@ -7,3 +7,5 @@ desktop.ini
 __pycache__/
 *.pyc
 dist/
+.spec/
+/specs/
