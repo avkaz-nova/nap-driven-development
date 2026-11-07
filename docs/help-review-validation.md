@@ -4,7 +4,7 @@ These are manual acceptance checks, not claims of completed verification. Run
 in a disposable project with a disposable NDD installation. Never point cleanup
 at personal agent folders. Test all four combinations: macOS/Codex,
 macOS/Claude Code, Windows/Codex and Windows/Claude Code. Use `$` in Codex and `/`
-in Claude Code. Record kit version, agent version, OS, input, actual response,
+in Claude Code. Record the kit source commit or archive checksum, agent version, OS, input, actual response,
 files read/commands run, before/after file contents and pass/fail/blocked per case.
 Git diff alone misses newly created reports; compare all files including untracked
 ones and local Git configuration. Do not execute the sample code during review.
@@ -56,8 +56,7 @@ consistent; expect a scoped conclusion, not a correctness guarantee.
 
 | Case / AC | Inputs | Expected observation |
 |---|---|---|
-| H1 / AC1–AC3 | In empty non-Git folder, call help; repeat after setup in project; call help with `code 001` extra text; ask in Russian and English | Verbatim English `assets/help.md` with only `{{VERSION}}` substituted: six commands, installed version, workflow/approvals, optional review, illustrative IDs and specs location; no translation or added commentary. No project scan, menu, command execution or writes. |
-| H2 / AC3 | Hide VERSION in the disposable loaded installation; keep another version in a source clone | Incomplete-installation/version-unavailable notice; no invented version or fallback to clone/other installation/network. Restore fixture afterward. |
+| H1 / AC1–AC3 | In empty non-Git folder, call help; repeat after setup in project; call help with `code 001` extra text; ask in Russian and English | Verbatim compact English `assets/help.md`: setup first, init second and optional for a new project only; all seven commands, invocation variations, simple workflow and brief ID/path notes. No long explanations, translation, added commentary, project scan or writes. |
 | H3 | Remove `assets/help.md` in the disposable installation | Report the missing resource; do not reconstruct help or search another installation. |
 | S1 / AC4 | Explicit `010`, `ak-010`, full folder name and path to its spec; then missing ID, path outside project and link escaping project | Same feature for valid inputs; report missing/unsafe selections without creating anything or selecting a replacement. |
 | S2 / AC4 | Create duplicate `ak-010-duplicate`; try qualified and short ID | Ask for full name/path, no arbitrary match. Remove duplicate for later cases. |
@@ -73,7 +72,7 @@ consistent; expect a scoped conclusion, not a correctness guarantee.
 | W2 / AC14 | Existing report below; say only yes to save, then choose extend | Clarify replace/extend first. Extend one report: stable IDs, preserved comments, new unique IDs, no appended second report. |
 | W3 / AC14 | Fix F1 in fixture, leave F2 outside scope; extend after inspecting only F1 area | F1 checked with fixed/date/evidence; F2 retained with not-rechecked note. Silence about F2 never closes it. No tests run. |
 | W4 / AC14 | Explicit replace; in separate cases edit/create report between offered choice and saving, use report/parent link, deny write access | Replace only on explicit choice; concurrent change requires renewed agreement; unsafe link refused; write failure reported with chat report retained. No status changes. |
-| I1 / AC12 | Isolated install, four-skill upgrade, repeat, preview, per-agent/full removal, existing NDD skill names and missing review resource | Six skills and resources copied; existing NDD skills replaced without retained backups; dry-run/missing-resource failure causes no writes; receipts preserve ownership checks; removal keeps other agent/custom skills and project documents. Use automated tests plus native Windows shells. |
+| I1 / AC12 | Isolated install, upgrade from a smaller skill set, repeat, preview, per-agent/full removal, existing NDD skill names and missing review resource | Seven skills and resources copied; existing NDD skills replaced without retained backups; dry-run/missing-resource failure causes no writes; receipts preserve ownership checks; removal keeps other agent/custom skills and project documents. Use automated tests plus native Windows shells. |
 
 Existing report for W2/W3 (adjust date to your fixture; these are sample findings):
 

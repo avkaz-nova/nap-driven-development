@@ -12,15 +12,9 @@ If an unresolved conflict blocks the requested work, explain the specific
 contradiction and pause the affected work; do not silently bypass or rewrite rules.
 For help, use instructions already in context; do not inspect the project.
 
-Return the predefined reference verbatim, with only the version substituted:
-
-1. Read [help text](assets/help.md) and [kit version](../ndd-setup/VERSION)
-   relative to this loaded skill's location, preferably in one read operation.
-2. Trim surrounding whitespace from the version. If it is absent, unreadable,
-   or not a numeric `major.minor.patch`, use
-   `version unavailable — incomplete installation` instead.
-3. Replace `{{VERSION}}` in the help text with that value. Return the entire
-   resulting text unchanged, without a preamble, summary, translation or code fence.
+Read the [help text](assets/help.md) relative to this loaded skill's location.
+Return the entire text verbatim, without a preamble, summary, translation or
+code fence. No substitutions or installation metadata are needed.
 
 If the help text is missing or unreadable, report that resource error and stop;
 do not reconstruct it. Do not search another installation or the network.

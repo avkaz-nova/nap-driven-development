@@ -16,7 +16,7 @@ from unittest.mock import patch
 from process_environment import child_environment
 
 REPO = Path(__file__).resolve().parents[1]
-NAMES = ('ndd-setup', 'ndd-spec', 'ndd-plan', 'ndd-do', 'ndd-help', 'ndd-review')
+NAMES = ('ndd-setup', 'ndd-spec', 'ndd-plan', 'ndd-do', 'ndd-help', 'ndd-review', 'ndd-init')
 WINDOWS = os.name == 'nt'
 POWERSHELL = WINDOWS or bool(os.environ.get('NDD_TEST_POWERSHELL'))
 
@@ -346,17 +346,30 @@ function Remove-Item {
         self.assertEqual(snapshot(self.target), installed)
         self.assertEqual(snapshot(self.distribution), source_before)
 
-    def test_upgrade_four_skill_030_installation(self) -> None:
-        # Reproduce the previous four-skill layout using the unchanged receipt
-        # protocol. No network/history dependency and no hand-forged receipts.
+    def test_receipts_omit_kit_metadata_and_legacy_ownership_still_uninstalls(self) -> None:
+        self.run_installer()
+        for name in NAMES:
+            receipt = self.state / f'{name}.receipt'
+            lines = receipt.read_text(encoding='utf-8').splitlines()
+            self.assertEqual(len(lines), 4)
+            self.assertEqual(lines[:2], ['ndd-kit-install', 'copy'])
+            # Old records have an unused metadata field; keep removal compatible.
+            receipt.write_text('\n'.join(['ndd-kit-install-v1', 'legacy'] + lines[1:]) + '\n',
+                               encoding='utf-8')
+        self.run_installer('--uninstall', '--keep-source')
+        self.assertFalse(self.state.exists())
+        self.assertEqual(list(self.target.iterdir()), [])
+
+    def test_upgrade_four_skill_installation(self) -> None:
+        # Reproduce a smaller skill set using real installer-generated receipts.
+        # No network/history dependency and no hand-forged receipts.
         originals = {name: (self.distribution / name).read_bytes()
-                     for name in ('install.sh', 'install.ps1', 'skills/ndd-setup/VERSION')}
+                     for name in ('install.sh', 'install.ps1')}
         for name in ('install.sh', 'install.ps1'):
             path = self.distribution / name
-            content = originals[name].replace(b' ndd-help ndd-review)', b')')
-            content = content.replace(b", 'ndd-help', 'ndd-review')", b")")
+            content = originals[name].replace(b' ndd-help ndd-review ndd-init)', b')')
+            content = content.replace(b", 'ndd-help', 'ndd-review', 'ndd-init')", b")")
             path.write_bytes(content)
-        (self.distribution / 'skills/ndd-setup/VERSION').write_text('0.3.0\n')
         self.run_installer('--codex-dir', str(self.other))
         for target in (self.target, self.other):
             self.assertEqual({p.name for p in target.iterdir()}, set(NAMES[:4]))
@@ -378,7 +391,8 @@ function Remove-Item {
         self.assertEqual(list(self.other.iterdir()), [])
 
     def test_missing_resources_fail_before_writes(self) -> None:
-        for resource in ('ndd-help/SKILL.md', 'ndd-help/assets/help.md',
+        for resource in ('ndd-init/SKILL.md', 'ndd-init/agents/openai.yaml',
+                         'ndd-setup/references/project-context.md', 'ndd-help/SKILL.md', 'ndd-help/assets/help.md',
                          'ndd-review/agents/openai.yaml',
                          'ndd-review/assets/review.md', 'ndd-review/references/report-updates.md'):
             with self.subTest(missing=resource):
@@ -397,7 +411,7 @@ function Remove-Item {
     def test_dry_run_has_no_writes(self) -> None:
         before = snapshot(self.root)
         result = self.run_installer('--dry-run')
-        for name in ('ndd-help', 'ndd-review'):
+        for name in ('ndd-help', 'ndd-review', 'ndd-init'):
             self.assertIn(name, result.stdout)
         self.assertEqual(snapshot(self.root), before)
 
@@ -528,7 +542,7 @@ function Remove-Item {
         before_backups = snapshot(self.state / 'backups')
         before_skills = snapshot(self.target)
         before_receipts = {p.name: p.read_bytes() for p in self.state.glob('*.receipt')}
-        (self.distribution / 'skills/ndd-setup/VERSION').write_text('0.3.1\n')
+        (self.distribution / 'skills/ndd-setup/update-note.txt').write_text('updated content\n')
         bin_dir = self.root / 'fake-bin'
         bin_dir.mkdir()
         wrapper = bin_dir / 'cp'
@@ -546,7 +560,7 @@ function Remove-Item {
     @unittest.skipIf(POWERSHELL, 'POSIX cleanup failure injection')
     def test_backup_cleanup_failure_is_reported_and_retry_removes_backups(self) -> None:
         self.run_installer()
-        (self.distribution / 'skills/ndd-setup/VERSION').write_text('0.3.1\n')
+        (self.distribution / 'skills/ndd-setup/update-note.txt').write_text('updated content\n')
         bin_dir = self.root / 'fake-bin'
         bin_dir.mkdir()
         wrapper = bin_dir / 'rm'
@@ -556,7 +570,7 @@ function Remove-Item {
         result = self.run_installer(success=False, environment=environment)
         self.assertIn('injected cleanup failure', result.stdout)
         self.assertIn('Cleanup/restore incomplete', result.stdout)
-        self.assertEqual((self.target / 'ndd-setup/VERSION').read_text(), '0.3.1\n')
+        self.assertEqual((self.target / 'ndd-setup/update-note.txt').read_text(), 'updated content\n')
         self.assertTrue((self.state / 'backups').is_dir())
         self.assertFalse((self.state / 'lock').exists())
         self.run_installer()
@@ -572,7 +586,7 @@ function Remove-Item {
         before_backups = snapshot(self.state / 'backups')
         before = snapshot(self.target)
         before_receipts = {p.name: p.read_bytes() for p in self.state.glob('*.receipt')}
-        (self.distribution / 'skills/ndd-setup/VERSION').write_text('0.3.1\n')
+        (self.distribution / 'skills/ndd-setup/update-note.txt').write_text('updated content\n')
         driver = self.root / 'fail-copy.ps1'
         driver.write_text('''param([string]$Installer, [string]$Target)
 function Copy-Item {
@@ -755,7 +769,6 @@ function Copy-Item {
         self.assertTrue((self.target / 'ndd-help/scripts/ndd-help').is_file())
         shutil.rmtree(legacy_scripts)
         expected = snapshot(self.distribution / 'skills/ndd-help')
-        version = (self.distribution / 'skills/ndd-setup/VERSION').read_bytes()
         result = self.run_installer()
         self.assertNotIn('Terminal help:', result.stdout)
         self.assertNotIn('add this directory to PATH', result.stdout)
@@ -764,13 +777,13 @@ function Copy-Item {
         self.run_installer()  # Reinstall remains idempotent.
         shutil.rmtree(self.distribution / 'skills')
         self.assertEqual(snapshot(self.target / 'ndd-help'), expected)
-        self.assertEqual((self.target / 'ndd-setup/VERSION').read_bytes(), version)
         self.run_installer('--uninstall')
         self.assertFalse((self.target / 'ndd-help').exists())
 
     def test_bundled_templates_work_without_source_or_project_setup(self) -> None:
         expected = {name: (self.distribution / 'skills/ndd-setup/assets' / name).read_bytes()
                     for name in ('spec.md', 'plan.md')}
+        context = (self.distribution / 'skills/ndd-setup/references/project-context.md').read_bytes()
         self.run_installer()
         shutil.rmtree(self.distribution / 'skills')
         project = self.root / 'work-project'
@@ -781,6 +794,8 @@ function Copy-Item {
             asset = self.target / skill / '../ndd-setup/assets' / template
             self.assertTrue(asset.is_file())
             self.assertEqual(asset.read_bytes(), expected[template])
+        init_context = self.target / 'ndd-init/../ndd-setup/references/project-context.md'
+        self.assertEqual(init_context.read_bytes(), context)
         self.assertEqual(snapshot(project), before)
         self.run_installer('--uninstall')
         self.assertFalse(self.state.exists())

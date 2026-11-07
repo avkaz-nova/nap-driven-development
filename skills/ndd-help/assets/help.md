@@ -1,45 +1,34 @@
-NDD {{VERSION}} is a simple spec-driven workflow: describe a change, agree on a short specification and plan, then complete the approved plan and verify it.
+NDD: describe a change, approve its spec and plan, then implement and verify.
+These are chat commands: `$` in Codex, `/` in Claude Code.
 
-These are chat commands, not terminal commands. Codex uses `$`; Claude Code uses `/`.
-
-| Codex example | Claude Code example | Purpose |
+| Codex | Claude Code | Purpose |
 |---|---|---|
-| `$ndd-setup` | `/ndd-setup` | Inspect setup and confirm a personal feature prefix; approve configuration changes before saving. |
-| `$ndd-spec Fix CSV export` | `/ndd-spec Fix CSV export` | Prepare a change specification for approval. |
-| `$ndd-plan 001` | `/ndd-plan 001` | Turn an approved specification into a task and verification plan for approval. |
-| `$ndd-do 001` | `/ndd-do 001` | Complete all remaining tasks and verification in an approved, current plan. |
-| `$ndd-help` | `/ndd-help` | Show this reference, even before setup. |
-| `$ndd-review 001` | `/ndd-review 001` | Review the latest available stage; show findings in chat and offer to save them. |
+| `$ndd-setup` | `/ndd-setup` | Check readiness and confirm your task prefix. |
+| `$ndd-init` | `/ndd-init` | Optional, for a new project: agree on purpose, main capabilities and/or rules. |
+| `$ndd-spec Fix CSV export` | `/ndd-spec Fix CSV export` | Write a feature, bug or change spec for approval. |
+| `$ndd-plan 001` | `/ndd-plan 001` | Prepare an implementation plan for approval. |
+| `$ndd-do 001` | `/ndd-do 001` | Complete all remaining tasks and verification in an approved plan. |
+| `$ndd-review 001` | `/ndd-review 001` | Optional review of the latest available stage: spec, plan or code. |
+| `$ndd-help` | `/ndd-help` | Show this reference. |
 
-Workflow: describe → spec → user approves spec → plan → user approves plan → implement and verify.
+Workflow: setup → init (optional, new project only) → spec → approve → plan → approve → do + verify.
+For an existing project, skip init.
 
-Specs contain a goal and acceptance-criteria checklist; plans contain an approach and tasks/checks. Extra sections appear when useful, and existing longer documents still work.
+Common variations (use `/` instead of `$` in Claude Code):
 
-Executing a plan (examples use Codex; use `/` instead of `$` in Claude Code):
-
-| Example | What runs |
+| Example | Meaning |
 |---|---|
-| `$ndd-do 001` | All remaining tasks in order, followed by final verification. |
-| `$ndd-do 001 T2` | Only task T2 and its required checks; stops afterward. |
-| `$ndd-do ak-001 T2` | Only T2 in the explicitly selected feature ak-001. |
+| `$ndd-init Build a workout tracker` | Start from an idea; choose any project documents before saving. |
+| `$ndd-init only rules` or `$ndd-init only features` | Choose just rules or the capability overview. |
+| `$ndd-spec specs/ak-001-export/spec.md` | Revise an existing spec. |
+| `$ndd-do 001 T2` | Run only T2 and its checks, then stop. Required unfinished tasks are reported. |
+| `$ndd-do ak-001 T2` | Select the task with an explicit prefix. |
+| `$ndd-review 001 spec`, `$ndd-review 001 plan`, `$ndd-review 001 code` | Choose the review stage. |
+| `$ndd-review plan ak-001` | Put the stage first and use an explicit prefix. |
+| `$ndd-review` or `$ndd-review plan` | Propose the highest-numbered task for your prefix and ask before reviewing. |
 
-`001` is the feature number; `T2` is a task ID from its `plan.md`. For a plan with T1, T2 and T3, if T1 is complete, `ndd-do 001` continues with T2 and T3. To do only T2, use `ndd-do 001 T2`; a later `ndd-do 001` resumes the remaining work. If T2 needs an unfinished T1, the agent reports that prerequisite instead of silently doing T1. Execution requires an approved, current plan and stops for blockers, scope changes or actions needing separate authorization.
+`001` uses your confirmed prefix (for example, `ak-001`); `T2` is a task in `plan.md`.
+Plan, do and review also accept a task document path. Later `ndd-do 001` resumes unfinished work.
+Review does not approve or implement changes; saving `review.md` is optional.
 
-Review is optional: it neither grants approval nor replaces verification.
-
-| Example | What is reviewed |
-|---|---|
-| `$ndd-review 001` | The latest available stage: code, plan or spec. |
-| `$ndd-review 001 spec` | The specification: clarity, contradictions and acceptance criteria. |
-| `$ndd-review 001 plan` | The plan against the spec: coverage, tasks and verification. |
-| `$ndd-review 001 code` | The implementation against the spec and plan. |
-| `$ndd-review plan ak-001` | The same plan review with mode first and an explicit prefix. |
-| `$ndd-review` | Proposes the highest-numbered specification for the current prefix and asks for confirmation. |
-
-Review reports findings in chat without changing code or running tests, then offers to save `review.md`.
-
-Illustrative IDs and file locations:
-
-- `001` uses the confirmed prefix: for example, prefix `ak` resolves it to `ak-001`. Confirm a prefix through setup, or supply a qualified ID when none is configured.
-- `ak-001` explicitly selects a prefix and number, including a teammate's task. Numbers advance separately per prefix; ambiguous matches require a full name/path.
-- Documents normally live in `specs/ak-001-fix-csv-export/`: `spec.md`, `plan.md`, and optionally `review.md`. Project conventions or an explicit output path may choose another location. These are ordinary files Git can track unless ignored; existing code need not be rewritten as specs.
+Task documents live in `specs/<task>/`; optional project documents in `specs/project/`.

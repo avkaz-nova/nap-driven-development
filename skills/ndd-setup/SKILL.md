@@ -13,12 +13,14 @@ contradiction and pause the affected work; do not silently bypass or rewrite rul
 
 Check readiness for the explicitly invoked NDD workflow and confirm a personal
 feature prefix. Inspection is read-only; after confirmation, save the prefix
-in local Git config and register the project in the shared NDD registry. Do not create instruction blocks, imports, project templates,
-a manifest or an empty specs folder. The first `ndd-spec` creates task documents.
+in local Git config and register the project in the shared NDD registry. Do not
+create instruction blocks, imports, project templates, a manifest or an empty
+specs folder. Task documents start with `ndd-spec`; optional project documents
+start with `ndd-init`.
 Invoke `ndd-setup` without flags.
 
-This skill contains `VERSION` and the standard `assets/spec.md` and `assets/plan.md`.
-The other five NDD skills are siblings. Review also bundles its own report
+This skill contains the standard `assets/spec.md` and `assets/plan.md`.
+The other six NDD skills are siblings. Review also bundles its own report
 template; help provides a short reference without requiring setup. Use this loaded
 kit's actual location; never silently combine resources from different installations. Bundled
 assets are the only templates: do not copy them into projects or select custom
@@ -26,14 +28,14 @@ project templates. If resources are missing, report the incomplete installation.
 
 ## Inspect
 
-1. Identify the running agent, loaded kit version and project root (Git root when
+1. Identify the running agent, loaded kit location and project root (Git root when
    available, otherwise the current folder). Report relevant local changes.
    Do not initialize Git or create a branch.
 2. Read applicable project/ancestor instructions and relevant scoped rules,
    overrides and imports. Read existing `AGENTS.md`/`CLAUDE.md` in place. Do not
    create or edit project or global instruction files simply to enable NDD.
 3. Inventory relevant installed skills and command metadata, including duplicate
-   NDD versions or other SDD tools. Read full bodies only to investigate a likely
+   NDD installations or other SDD tools. Read full bodies only to investigate a likely
    conflict. Inspect instruction/skill-loading settings and known user guidance
    in the configured agent homes. Directory presence alone does not prove that
    a skill loads. Report unavailable settings as unverified.
@@ -42,9 +44,12 @@ project templates. If resources are missing, report the incomplete installation.
    `.env`, conversation history or unrelated global files. Never dump environment
    variables or entire configuration files.
 5. Check that the default output directory `specs/` does not belong to an unrelated
-   workflow. Leave it absent until the first task. For an existing NDD project,
+   workflow. Setup leaves it absent; init or the first task may create it.
+   For an existing NDD project,
    read [existing-project guidance](references/project-state.md) if a legacy
    manifest, instruction block or copied template is found. Preserve those files.
+   Check optional project documents using the
+   [project context rules](references/project-context.md); do not create or synchronize them.
 
 ## Choose a personal prefix
 
@@ -83,7 +88,8 @@ State:
 - the confirmed prefix and whether it was saved locally, reused or is session-only;
 - any actual conflict and unresolved checks;
 - exact changes, including registry status, or that nothing was written;
-- the next invocation: `/ndd-spec <idea>` or `$ndd-spec <idea>`.
+- the next invocation: `ndd-spec <idea>` for a task, or optional `ndd-init` to
+  discuss project purpose, capabilities or rules (`/` in Claude Code, `$` in Codex).
 
 A readiness report is not approval of a future spec or plan. Skills perform the
 workflow when explicitly invoked; normal coding requests need not use NDD.

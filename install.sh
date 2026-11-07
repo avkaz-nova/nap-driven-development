@@ -4,7 +4,7 @@ set -euo pipefail
 
 KIT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 [[ "$KIT_DIR" != *$'\n'* && "$KIT_DIR" != *$'\t'* ]] || { echo 'Distribution path contains tabs or line breaks.' >&2; exit 1; }
-NAMES=(ndd-setup ndd-spec ndd-plan ndd-do ndd-help ndd-review)
+NAMES=(ndd-setup ndd-spec ndd-plan ndd-do ndd-help ndd-review ndd-init)
 CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills"
 CODEX_DIR="$HOME/.agents/skills"
 WANT_CLAUDE=0 WANT_CODEX=0 UNINSTALL=0 DRY_RUN=0 REPLACE=0 KEEP_SOURCE=0
@@ -98,9 +98,16 @@ fingerprint() (
 owned_receipt() {
   local record="$1" mode
   [[ -f "$record" && ! -L "$record" ]] || return 1
-  [[ "$(sed -n '1p' "$record")" == ndd-kit-install-v1 ]] || return 1
-  [[ "$(wc -l < "$record" | tr -d '[:space:]')" == 5 ]] || return 1
-  mode=$(sed -n '3p' "$record")
+  case "$(sed -n '1p' "$record")" in
+    ndd-kit-install)
+      [[ "$(wc -l < "$record" | tr -d '[:space:]')" == 4 ]] || return 1
+      mode=$(sed -n '2p' "$record") ;;
+    ndd-kit-install-v1)
+      # Accept existing ownership records during removal; new records omit kit metadata.
+      [[ "$(wc -l < "$record" | tr -d '[:space:]')" == 5 ]] || return 1
+      mode=$(sed -n '3p' "$record") ;;
+    *) return 1 ;;
+  esac
   [[ "$mode" == copy || "$mode" == link ]]
 }
 # Do not traverse redirected destination parents or metadata directories.
@@ -156,11 +163,7 @@ source_retention_reason() {
   if [[ -n "$commits" ]]; then echo 'clone contains history not present in local remote-tracking refs'; return; fi
   return 0
 }
-VERSION=unknown
 if [[ $UNINSTALL -eq 0 ]]; then
-  [[ -f "$KIT_DIR/skills/ndd-setup/VERSION" ]] || fail "Incomplete distribution: VERSION missing."
-  VERSION=$(tr -d '[:space:]' < "$KIT_DIR/skills/ndd-setup/VERSION")
-  [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || fail "Invalid VERSION."
   for name in "${NAMES[@]}"; do
     src="$KIT_DIR/skills/$name"
     [[ ! -L "$src" && -f "$src/SKILL.md" && -f "$src/agents/openai.yaml" ]] || fail "Incomplete or linked distribution: $name"
@@ -170,6 +173,7 @@ if [[ $UNINSTALL -eq 0 ]]; then
     [[ -f "$KIT_DIR/skills/ndd-setup/assets/$asset" ]] || fail "Missing asset: $asset"
   done
   [[ -f "$KIT_DIR/skills/ndd-help/assets/help.md" ]] || fail "Missing help resource: assets/help.md"
+  [[ -f "$KIT_DIR/skills/ndd-setup/references/project-context.md" ]] || fail "Missing project context resource."
   for resource in assets/review.md references/report-updates.md; do
     [[ -f "$KIT_DIR/skills/ndd-review/$resource" ]] || fail "Missing review resource: $resource"
   done
@@ -198,7 +202,7 @@ for i in "${!TARGETS[@]}"; do
       else echo "  Absent: $name"; fi
     elif exists "$dest"; then
       echo "  Replace (including local edits; no retained backup): $name"
-    else echo "  Install $VERSION ($MODE): $name"; fi
+    else echo "  Install ($MODE): $name"; fi
   done
   if [[ $UNINSTALL -eq 1 && -d "$target.ndd-kit" ]]; then
     echo "  Permanently remove all receipts, backups and staging files: $target.ndd-kit"
@@ -334,7 +338,7 @@ for target in "${TARGETS[@]}"; do
     else cp -R "$src" "$stage/skill"; fi
     digest=$(fingerprint "$src")
     [[ "$(fingerprint "$stage/skill")" == "$digest" ]] || fail "Copy verification failed: $name"
-    printf 'ndd-kit-install-v1\n%s\n%s\n%s\n%s\n' "$VERSION" "$MODE" "$src" "$digest" > "$stage/receipt"
+    printf 'ndd-kit-install\n%s\n%s\n%s\n' "$MODE" "$src" "$digest" > "$stage/receipt"
     mkdir -p "$target.ndd-kit/backups"
     backup=$(mktemp -d "$target.ndd-kit/backups/$name.XXXXXX")
     idx=${#DESTS[@]}
@@ -348,5 +352,5 @@ for target in "${TARGETS[@]}"; do
   done
 done
 SUCCESS=1
-printf '\nInstalled NDD %s. In your project use /ndd-setup (Claude Code) or $ndd-setup (Codex).\n' "$VERSION"
+printf '\nInstalled NDD. Use ndd-setup for readiness or ndd-init for optional project documents ($ in Codex, / in Claude Code).\n'
 echo 'Restart the agent if the skills do not appear.'

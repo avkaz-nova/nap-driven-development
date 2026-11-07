@@ -1,6 +1,6 @@
 ---
 name: ndd-spec
-description: Create or revise an NDD feature specification describing expected behaviour and acceptance criteria. Invoke explicitly with ndd-spec; this phase does not implement code.
+description: Create or revise an NDD task specification for a feature, bug or other change, describing expected behaviour and acceptance criteria. Invoke explicitly with ndd-spec; this phase does not implement code.
 argument-hint: "<feature idea | path to spec.md> [output path in the request]"
 disable-model-invocation: true
 ---
@@ -14,9 +14,12 @@ contradiction and pause the affected work; do not silently bypass or rewrite rul
 
 Create or revise `specs/PREFIX-NNN-feature-slug/spec.md`, or an explicitly requested
 project-relative feature path. Until the user chooses to continue to planning,
-this phase may edit only that specification and create its containing folder.
-Read applicable project instructions in place; preserve unrelated work. Use the
-user's language. No project manifest is required.
+this phase may edit that specification, create its containing folder, and
+synchronize relevant links/statuses in an existing project capability overview.
+Read applicable project instructions in place; preserve unrelated work. Follow
+the [project context and overview rules](../ndd-setup/references/project-context.md)
+for optional context, document language and synchronization. Without a chosen
+document language, use the user's language. No project manifest is required.
 If a legacy manifest exists, follow the [existing-project guidance](../ndd-setup/references/project-state.md).
 
 1. Resolve the project and feature using the shared
@@ -52,7 +55,10 @@ If a legacy manifest exists, follow the [existing-project guidance](../ndd-setup
    their structure and identifiers when revising; do not migrate merely for brevity.
 4. Check ambiguity, contradictions, missing boundary cases and AC coverage.
    Use `clarifying` if material questions remain, otherwise `draft`.
-5. Show the short spec once (or the changed parts when revising), without a
+5. Synchronize the relevant existing overview entry after saving the spec and
+   after subsequent approval/status changes, following the shared rules. Do not
+   create missing project documents or promote a capability to done from a draft.
+6. Show the short spec once (or the changed parts when revising), without a
    duplicate summary, and ask for review. When ready for approval, offer
    "Approve spec and continue with Plan <id>", "Approve spec only", and
    "Request changes". Substitute the resolved qualified ID (e.g. `ak-001`),

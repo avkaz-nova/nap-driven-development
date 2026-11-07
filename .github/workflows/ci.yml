@@ -32,8 +32,8 @@ jobs:
           python-version: '3.13'
       - name: Test installers, digests and distribution
         run: python -m unittest discover -s tests -v
-      - name: Build local release artifact
-        run: python scripts/build_release.py
+      - name: Build current distribution
+        run: python scripts/build_distribution.py
       - uses: actions/upload-artifact@v6
         with:
           name: ndd-${{ matrix.os }}-${{ matrix.powershell || 'bash' }}

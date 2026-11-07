@@ -1,17 +1,23 @@
 # Workflow and approvals
 
-Each feature has two core files: `spec.md` describes the agreed behaviour;
-`plan.md` contains implementation tasks, progress and verification results.
+Each task (a feature, bug or other change) has two core files: `spec.md` describes
+the agreed behaviour; `plan.md` contains implementation tasks, progress and
+verification results.
 
 | Step | What happens |
 |---|---|
+| `ndd-setup` | Check readiness and confirm your task prefix |
+| `ndd-init [idea or request]` | Optional, new project only: agree on purpose, main capabilities and/or rules |
 | `ndd-spec <idea>` | Write or revise the spec and resolve open questions |
 | Approve the spec | Confirm the current requirements in chat |
 | `ndd-plan <id>` | Create a technical plan with tasks and checks |
 | Approve the plan | Confirm the current approach and task scope in chat |
 | `ndd-do <id>` | Complete all remaining approved tasks and verification |
-| `ndd-help` | Show commands, version and ID rules, with no setup required |
+| `ndd-help` | Show commands, workflow and ID rules, with no setup required |
 | `ndd-review [feature] [mode]` | Optional review of spec, plan or implementation |
+
+Workflow: setup → init (optional, new project only) → spec → approve → plan → approve → do + verify.
+For an existing project, skip init.
 
 Use `/` before commands in Claude Code and `$` in Codex. A short id such as `001`
 uses your [setup prefix](setup.md#your-prefix); a qualified id or full path selects
@@ -29,6 +35,26 @@ approval without starting a plan; the agent then offers **Continue with Plan <id
 the host supports them; otherwise a short chat reply selects the action.
 No selection means no approval or transition. Planning still ends with a separate
 plan approval; continuing does not authorize implementation.
+
+## Optional project context
+
+For a new project, optional `ndd-init` can create any combination of
+`specs/project/spec.md`, `features.md` and
+`rules.md`, beside task folders. It first discusses the need, recommends documents,
+then shows the chosen drafts for one approval. Rules-only and overview-only
+requests are valid. Repeating init preserves unselected documents and task paths.
+[See the init conversation and examples](init.md).
+
+Spec, plan and do use existing project context and synchronize related task
+links/statuses in an existing overview as part of their work. They do not create
+a missing overview or change product scope, stages or rules. Review reports
+inconsistencies without synchronization. Progress is derived from task documents
+and verification; completion requires coverage of the whole described capability.
+Manual edits are picked up on later relevant invocations, not by a background job.
+
+`project/` is excluded from task numbering and latest-task selection. Its spec
+is not an executable task and cannot be passed to plan/do as an implementation
+plan. Choose a concrete feature, bug or other change instead.
 
 ## Compact documents
 
@@ -67,8 +93,11 @@ file requires a fresh choice before saving. No answer means no write.
 
 ## When requirements change
 
-The plan stores a checksum of the spec body. If that body changes, implementation
-stops for review and an updated plan. Status changes and line-ending differences
+The plan stores a checksum of the spec body. This does not cover external project
+documents: relevant changed project requirements/rules must also be reconciled
+before affected implementation, even when the task checksum still matches.
+If the spec body changes, implementation stops for review and an updated plan.
+Status changes and line-ending differences
 do not invalidate it; edits to the body do, including wording changes.
 
 Changed requirements need spec approval again. Revise the affected tasks while

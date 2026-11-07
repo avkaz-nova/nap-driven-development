@@ -8,7 +8,8 @@ NDD helps **Claude Code and Codex** implement changes that match your requiremen
 It keeps the scope, tasks and verification results in your project, so you can
 continue work across sessions or switch agents. Available on **Mac and Windows**.
 
-Use it in an existing project, with its current structure, tools and rules.
+Start a new project with optional purpose, capability and rules documents, or
+use NDD in an existing project with its current structure, tools and rules.
 NDD respects global, project and nested instructions, including `AGENTS.md` and
 `CLAUDE.md`, and surfaces conflicts before proceeding with affected work.
 
@@ -24,7 +25,7 @@ tasks and checks. You approve both before the agent changes code, then review th
 verification results. See the [example spec](examples/002-csv-export/spec.md) and
 [plan](examples/002-csv-export/plan.md)—illustrative documents, not a completed demo.
 
-[Download v0.6.0 (public preview)](https://github.com/avkaz/nap-driven-development/releases/tag/v0.6.0)
+[Download the current source ZIP](https://github.com/avkaz/nap-driven-development/archive/refs/heads/main.zip)
 or install with Git below.
 
 ## Install
@@ -190,7 +191,7 @@ Restart your agent after installation.
 <details>
 <summary>No Git? Download a ZIP instead</summary>
 
-1. Open the [v0.6.0 release](https://github.com/avkaz/nap-driven-development/releases/tag/v0.6.0) and download **ndd-kit-0.6.0.zip** from **Assets**.
+1. Download the [current source ZIP](https://github.com/avkaz/nap-driven-development/archive/refs/heads/main.zip).
 2. Extract the ZIP and open Terminal or PowerShell in the extracted folder.
 3. Run **step 3** from the Mac or Windows instructions above.
 
@@ -203,6 +204,7 @@ Run these commands in your agent's chat. Codex uses `$`; Claude Code uses `/`.
 | Action | Codex | Claude Code |
 |---|---|---|
 | Check project and choose prefix | `$ndd-setup` | `/ndd-setup` |
+| Optional, new project only: describe purpose, capabilities or rules | `$ndd-init` | `/ndd-init` |
 | Describe a change | `$ndd-spec Fix CSV export` | `/ndd-spec Fix CSV export` |
 | Plan an approved spec | `$ndd-plan 001` | `/ndd-plan 001` |
 | Complete an approved plan | `$ndd-do 001` | `/ndd-do 001` |
@@ -211,7 +213,15 @@ Run these commands in your agent's chat. Codex uses `$`; Claude Code uses `/`.
 | Review a specific stage | `$ndd-review 001 plan` | `/ndd-review 001 plan` |
 | Show command reference | `$ndd-help` | `/ndd-help` |
 
-Approve the spec and plan in chat before proceeding. After showing a spec, the
+Workflow: setup → init (optional, new project only) → spec → approve → plan → approve → do + verify.
+
+Start with `ndd-setup`. For a new project, optionally use `ndd-init` to discuss
+the idea and choose a description, capability overview and/or rules. Approve the
+chosen documents together. For an existing project, skip init and use `ndd-spec`
+for a feature, bug or other change.
+[Project initialization and progress →](docs/init.md)
+
+Approve each task spec and plan in chat before proceeding. After showing a spec, the
 agent offers **Approve spec and continue with Plan** for that feature. Selecting
 it approves the spec and starts planning; the plan still needs its own approval.
 Interactive choices depend on the host; a short chat reply also works.
@@ -223,7 +233,7 @@ are reported; a later `ndd-do 001` resumes the remaining work.
 Review is optional. Use `spec`, `plan` or `code` to select a stage, for example
 `ndd-review 001 spec` or `ndd-review 001 code`. Findings appear in chat, with an
 option to save `review.md`. Review does not run tests or replace approval and
-verification. `ndd-help` includes more examples and works before setup.
+verification. `ndd-help` shows a compact command reference and works before setup.
 
 ## Feature IDs and files
 
@@ -233,20 +243,31 @@ Numbers advance separately per prefix. Each clone needs its own setup.
 
 ```text
 specs/
+├── project/             (optional; choose any files)
+│   ├── spec.md          (purpose and scope)
+│   ├── features.md      (main capabilities, stages and task links)
+│   └── rules.md         (agreed project conventions)
 └── ak-001-fix-csv-export/
     ├── spec.md
     ├── plan.md
-    └── review.md  (optional)
+    └── review.md        (optional)
 ```
 
-Specs contain a goal and acceptance criteria; plans contain tasks and checks.
+Task specs contain a goal and acceptance criteria; plans contain tasks and checks.
 Create them only for changes you choose. These are ordinary files you can commit
-with your code. NDD preserves existing `AGENTS.md` / `CLAUDE.md` instructions and
+with your code.
+
+Spec, plan and do use optional project context and refresh relevant task links and
+progress in an existing capability overview. Review reports stale entries without
+editing them. This happens during commands, not through a background watcher.
+One completed task does not automatically complete an entire capability.
+NDD preserves existing `AGENTS.md` / `CLAUDE.md` instructions and
 does not commit, push or deploy automatically.
 
 ## Update
 
-In your cloned NDD folder, download the latest changes:
+NDD distributes the current repository state without numbered releases. In your
+cloned NDD folder, download the latest changes:
 
 ```sh
 git pull --ff-only
@@ -347,8 +368,8 @@ and their enclosing `.agents` / `.claude` folders are not removed.
 
 Removes:
 
-- The six owned skill folders — `ndd-setup`, `ndd-spec`, `ndd-plan`, `ndd-do`,
-  `ndd-help`, `ndd-review` —
+- The seven owned skill folders — `ndd-setup`, `ndd-spec`, `ndd-plan`, `ndd-do`,
+  `ndd-help`, `ndd-review`, `ndd-init` —
   from `~/.agents/skills`.
 - `~/.agents/skills.ndd-kit`, including installation receipts, backups and leftover
   staging files.
@@ -391,8 +412,8 @@ powershell -NoProfile -File .\install.ps1 -Codex -Uninstall
 
 Removes:
 
-- The six owned skill folders — `ndd-setup`, `ndd-spec`, `ndd-plan`, `ndd-do`,
-  `ndd-help`, `ndd-review` —
+- The seven owned skill folders — `ndd-setup`, `ndd-spec`, `ndd-plan`, `ndd-do`,
+  `ndd-help`, `ndd-review`, `ndd-init` —
   from `~/.claude/skills`.
 - `~/.claude/skills.ndd-kit`, including installation receipts, backups and leftover
   staging files.
@@ -435,7 +456,7 @@ powershell -NoProfile -File .\install.ps1 -Claude -Uninstall
 
 Removes:
 
-- The six owned NDD skill folders from both `~/.agents/skills` and
+- The seven owned NDD skill folders from both `~/.agents/skills` and
   `~/.claude/skills`, including local edits.
 - Both installation metadata folders, `~/.agents/skills.ndd-kit` and
   `~/.claude/skills.ndd-kit`, including all receipts, backups and leftover staging files.

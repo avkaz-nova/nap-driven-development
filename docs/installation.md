@@ -45,13 +45,13 @@ organization's installation policy.
 
 ## Replacing existing skills
 
-Install and update automatically replace all six NDD skill directories at the
+Install and update automatically replace all seven NDD skill directories at the
 selected destinations, including local edits and existing directories without
 receipts. Unrelated skills and project files are preserved. Use `--dry-run` /
 `-DryRun` to preview. The old `--replace` / `-Replace` option is no longer needed.
 
 Receipts live beside the skills directory in `<skills-directory>.ndd-kit`.
-Successful installs retain no backups and delete backups left by earlier versions.
+Successful installs retain no backups and delete backups left by earlier installations.
 Previous skills and receipts are held temporarily under `backups/` only to restore
 them if installation fails. Failed recovery retains these files for manual repair.
 Uninstall deletes all installation state; an existing skill without valid ownership
@@ -70,7 +70,7 @@ information still blocks uninstall.
 ## Uninstall
 
 Use `--uninstall` / `-Uninstall` with your original agent and destination options.
-Removal permanently deletes the six owned NDD skill folders and the adjacent
+Removal permanently deletes the seven owned NDD skill folders and the adjacent
 `<skills-directory>.ndd-kit` metadata, including local skill edits, receipts,
 backups and staging files. The agent applications and enclosing `.agents` /
 `.claude` folders remain, as do project code, specs, plans, instructions, unrelated
@@ -86,7 +86,7 @@ unwritable configs are reported and their records retained. An unreadable or
 locked registry is skipped with a warning. Only recorded projects are checked;
 no disk search is performed. These errors do not prevent skill/source removal.
 
-Older versions included a terminal `ndd-help` command. Updating removes its
+Earlier installations included a terminal `ndd-help` command. Updating removes its
 launchers; remove any manually added `ndd-help/scripts` PATH entry yourself.
 Chat help remains available as `$ndd-help` or `/ndd-help`.
 

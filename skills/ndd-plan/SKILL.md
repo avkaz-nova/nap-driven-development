@@ -12,14 +12,17 @@ Respect applicable global, project and nested instructions (`AGENTS.md`,
 If an unresolved conflict blocks the requested work, explain the specific
 contradiction and pause the affected work; do not silently bypass or rewrite rules.
 
-Edit only the feature's `plan.md`. Read applicable project instructions and the
+Edit the task's `plan.md` and relevant links/statuses in an existing project
+capability overview. Read applicable project instructions and the
 feature's spec. No manifest or copied project templates are required. If legacy
 NDD files exist, follow the [existing-project guidance](../ndd-setup/references/project-state.md).
 Resolve the feature with the shared
 [prefix and identifier rules](../ndd-setup/references/feature-ids.md): `001` uses
 the current user's confirmed prefix; `ak-001` or a full folder name/path selects
 an explicit feature. Report the resolved path; never guess between matches.
-Use the user's language and the project's existing tools.
+Follow the [project context and overview rules](../ndd-setup/references/project-context.md)
+for optional context, document language and synchronization. Use the project's
+existing tools. Without a chosen document language, use the user's language.
 
 1. Require spec status `approved` or `in-progress`, and no unresolved
    `[NEEDS CLARIFICATION]`. `in-progress` supports revising an implementation
@@ -52,10 +55,13 @@ Use the user's language and the project's existing tools.
    Quote paths. Use `pwsh` if that is the installed PowerShell. Stop on failure;
    never make up a checksum. The helpers hash the Markdown body as UTF-8/LF,
    ignoring BOM, frontmatter and trailing blank lines, with one final LF.
-7. Set the plan `status: draft`, show the short plan once (or changed parts),
+7. Set the plan `status: draft`, synchronize the relevant existing overview entry,
+   and show the short plan once (or changed parts),
    without repeating it in a summary, and ask for review. On explicit approval of
    this version, set `status: approved`.
-   A chat approval is enough; the agent records it. Next: `ndd-do <feature id>`.
+   A chat approval is enough; the agent records it and refreshes the overview
+   progress after checking plan currency. A draft plan never means ready.
+   Next: `ndd-do <feature id>`.
 
 If an existing plan is revised, preserve completed tasks and verification
 history that remain valid. Reopen affected tasks and explain why. A changed

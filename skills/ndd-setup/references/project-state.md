@@ -2,21 +2,22 @@
 
 New NDD projects need no manifest, instruction block or project-local template.
 The default document location is `specs/PREFIX-NNN-feature-slug/{spec,plan}.md`, created
-only when a specification is requested. All skills use the installed kit's
-`ndd-setup/assets` templates; the generated feature documents are independent of
+only when a task specification is requested. Optional `project/` documents live
+beside task folders; follow [project context rules](project-context.md). Task specs
+and plans use the installed kit's `ndd-setup/assets` templates; generated task documents are independent of
 the templates afterwards. Updating NDD does not rewrite those documents.
 The confirmed personal prefix is a local Git setting, not a tracked project file;
 see [prefixes and feature identifiers](feature-ids.md).
 
-## Projects created by 0.1 or 0.2
+## Existing NDD files
 
 An existing `.ndd-kit.json` can be read for output-location compatibility:
-- Version 0.1 (no format field) used `specs/`.
+- A manifest without a format field uses `specs/`.
 - Format 2 has a `specs_dir` field. Honor that relative directory when safe.
-- For unknown/newer formats, report the uncertainty and ask for an explicit
+- For unknown formats, report the uncertainty and ask for an explicit
   feature path instead of guessing, downgrading or overwriting the manifest.
 
-Do not create or update manifests, their version fields, managed hashes or agents
+Do not create or update manifests, their metadata, managed hashes or agents
 lists. Legacy `managed` entries do not authorize edits. Paths must stay inside
 the project and must not traverse links into other locations. A supplied feature
 path takes precedence over a manifest's default after these checks.

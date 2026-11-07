@@ -19,6 +19,12 @@ Tests use temporary projects and installation paths. They cover installation,
 updates, rollback, removal, project registration, spec checksums and ZIP contents.
 They do not install into your real agent folders or clean your real project registry.
 
+On every push and pull request, the same suite compares the main help command
+table with the skills discovered from `skills/*/SKILL.md`. Each skill must appear
+exactly once for both Codex and Claude Code, with matching commands in each row.
+Missing, obsolete or duplicate commands fail CI; adding a skill requires updating
+`skills/ndd-help/assets/help.md`.
+
 The CI workflow (`.github/workflows/ci.yml`) configures macOS, Ubuntu and
 Windows runs, including Windows PowerShell and PowerShell 7. Some checks are
 platform-specific and may be skipped. To select another PowerShell executable:
@@ -58,8 +64,8 @@ on the target OS, including open-file failures on Windows.
 Use the [help/review scenarios](help-review-validation.md) on macOS and Windows
 in both Claude Code and Codex. Record observations separately from automated
 checks. Distribution tests verify metadata/resources; installer tests also cover
-a synthetic four-skill 0.3.0 layout with genuine installer-generated receipts,
-upgrade/reinstall to six skills, missing resources, automatic replacement of
+a synthetic four-skill layout with genuine installer-generated receipts,
+upgrade/reinstall to seven skills, missing resources, automatic replacement of
 existing NDD skill names and local edits, and removal of retained backups.
 Installer checks also verify that updates remove legacy terminal help launchers
 while preserving the chat reference, including after source removal. Automated
@@ -105,3 +111,44 @@ In a disposable project, check both interactive-choice and text-only hosts:
 
 These are manual behavioral checks; packaging and metadata tests cannot verify
 that a host displays a button or that an agent follows the transition correctly.
+
+## Project initialization and overview updates
+
+Use disposable projects to exercise these behavioral cases in both agents.
+These scenarios are a manual checklist, not a claim that agent runs were performed.
+
+| Case | Expected result |
+|---|---|
+| Empty folder, no Git/prefix; init with a product idea | Discuss purpose/users, recommend a minimal document set, show selected drafts, save only after approval; no setup/code/Git side effects. |
+| Each of the seven nonempty combinations of spec/features/rules; also decline all | Exactly the chosen files; no mandatory spec, empty placeholders or repeated filename question after an explicit choice. Decline/silence writes nothing. |
+| Rules only, chosen interface and documentation languages | No required product interview; languages remain distinct; existing agent instructions retain precedence. |
+| Repeat init with existing notes, links and an unselected rules file | Selected changes shown together; notes/links and unselected files preserved, no new task plan or automatic implementation. |
+| Alternative specs root, existing task folders, no project documents | Init uses a sibling project folder; task commands preserve existing paths and do not create project documents. |
+| New spec unambiguously belongs to an existing capability | Add one relative link and draft progress; preserve stage, description and other links. Unclear mapping asks; unrelated bug need not enter the overview. |
+| Spec approved, plan draft, plan approved, implementation starts | Progress moves from spec approved/planning needed to ready to in progress; approvals are not inferred from the overview. |
+| Explicit single task completes; another remains or a required check fails | Neither spec nor capability is marked done; partial progress or blocker is shown. |
+| All linked specs done but described capability has uncovered scope | Do not infer capability completion; retain partial status or request scope review. |
+| Complete capability gets a new bug violating its described scope | Preserve completion history while showing the current limitation and linked fix. |
+| Reopened spec, stale digest, missing target, missing verification evidence | Refresh affected progress honestly; no false ready/done. Do not approve/rewrite other tasks to match the overview. |
+| Project rules change while the task digest still matches | Reconcile relevant changes before implementation; unrelated changes do not restart all tasks. |
+| Review finds a stale overview; setup/help invoked | Review reports without syncing; setup does not sync; help does not inspect the project. |
+| Concurrent edits, write failure, outside-project link or redirected path | Preserve concurrent work, reject unsafe traversal, report incomplete synchronization without discarding valid task work. |
+| Plan/do/review explicitly targets project/spec.md; latest-task selection | Explain that project context is not an executable task; ignore project/ when selecting numbered tasks. |
+
+Automated distribution and installer checks verify that init and its shared
+reference ship, survive source removal, install/update/uninstall with the other
+skills, and fail preflight without writes if required resources are missing.
+They do not prove conversational or status-aggregation behavior.
+
+## Current distribution
+
+There is no kit VERSION file, numbered release or release changelog. Install from
+the current main branch or its source ZIP. To build a reproducible local bundle:
+
+```bash
+python3 scripts/build_distribution.py
+```
+
+This writes `dist/ndd-kit.zip` and its SHA-256 file and does not publish anything.
+The ZIP contains the current kit with no Git metadata; track a source commit or
+archive checksum when reporting a problem. CI builds the same bundle as an artifact.

@@ -18,7 +18,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $KitDir = $PSScriptRoot
 if ($KitDir -match '[\r\n\t]') { throw 'The distribution path must not contain tabs or line breaks.' }
-$Names = @('ndd-setup', 'ndd-spec', 'ndd-plan', 'ndd-do', 'ndd-help', 'ndd-review')
+$Names = @('ndd-setup', 'ndd-spec', 'ndd-plan', 'ndd-do', 'ndd-help', 'ndd-review', 'ndd-init')
 $UserDirectory = [Environment]::GetFolderPath('UserProfile')
 function Clear-RegisteredProjects([switch]$Preview) {
     $helper = Join-Path $KitDir 'skills/ndd-setup/scripts/project-registry.ps1'
@@ -93,6 +93,10 @@ function Test-OwnedReceipt([string]$Receipt) {
     $record = Get-Entry $Receipt
     if (-not $record -or $record.PSIsContainer -or (Test-Link $record)) { return $false }
     $lines = @(Get-Content -LiteralPath $Receipt -Encoding UTF8)
+    if ($lines.Count -eq 4 -and $lines[0] -eq 'ndd-kit-install') {
+        return $lines[1] -in @('copy', 'link')
+    }
+    # Accept existing ownership records during removal; new records omit kit metadata.
     return $lines.Count -eq 5 -and $lines[0] -eq 'ndd-kit-install-v1' -and $lines[2] -in @('copy', 'link')
 }
 function Assert-DirectoryPath([string]$Path) {
@@ -159,10 +163,7 @@ function Get-SourceRetentionReason {
     return ''
 }
 
-$Version = 'unknown'
 if (-not $Uninstall) {
-    $Version = (Get-Content -LiteralPath (Join-Path $KitDir 'skills\ndd-setup\VERSION') -Raw).Trim()
-    if ($Version -notmatch '^\d+\.\d+\.\d+$') { throw 'Invalid VERSION.' }
     foreach ($name in $Names) {
         $source = Join-Path $KitDir "skills\$name"
         foreach ($file in @('SKILL.md', 'agents\openai.yaml')) {
@@ -175,6 +176,7 @@ if (-not $Uninstall) {
         if (-not (Test-Path -LiteralPath (Join-Path $KitDir "skills\ndd-setup\assets\$asset") -PathType Leaf)) { throw "Missing asset: $asset" }
     }
     if (-not (Test-Path -LiteralPath (Join-Path $KitDir 'skills/ndd-help/assets/help.md') -PathType Leaf)) { throw 'Missing help resource: assets/help.md' }
+    if (-not (Test-Path -LiteralPath (Join-Path $KitDir 'skills/ndd-setup/references/project-context.md') -PathType Leaf)) { throw 'Missing project context resource.' }
     foreach ($resource in @('assets/review.md', 'references/report-updates.md')) {
         if (-not (Test-Path -LiteralPath (Join-Path $KitDir "skills/ndd-review/$resource") -PathType Leaf)) { throw "Missing review resource: $resource" }
     }
@@ -213,7 +215,7 @@ foreach ($target in $Targets) {
             Write-Host "  Replace (including local edits; no retained backup): $name"
         } else {
             $mode = if ($Link) { 'link' } else { 'copy' }
-            Write-Host "  Install $Version ($mode): $name"
+            Write-Host "  Install ($mode): $name"
         }
     }
     if ($Uninstall -and (Test-Path -LiteralPath "$target.ndd-kit")) {
@@ -316,7 +318,7 @@ try {
             else { Copy-Item -LiteralPath $source -Destination (Join-Path $stage 'skill') -Recurse -Force }
             $digest = Get-Fingerprint $source
             if ((Get-Fingerprint (Join-Path $stage 'skill')) -ne $digest) { throw "Copy verification failed: $name" }
-            $receiptText = "ndd-kit-install-v1`n$Version`n$mode`n$source`n$digest`n"
+            $receiptText = "ndd-kit-install`n$mode`n$source`n$digest`n"
             [IO.File]::WriteAllText((Join-Path $stage 'receipt'), $receiptText, (New-Object Text.UTF8Encoding($false)))
             $backup = Join-Path "$target.ndd-kit" ('backups\' + $name + '.' + [Guid]::NewGuid().ToString('N'))
             $null = New-Item -ItemType Directory -Force -Path $backup
@@ -371,5 +373,5 @@ try {
     }
     if ($cleanupFailed -and -not $InstallFailed) { throw 'Install applied but cleanup is incomplete; inspect the reported paths before retrying.' }
 }
-Write-Host "Installed NDD $Version. In your project use /ndd-setup (Claude Code) or `$ndd-setup (Codex)."
+Write-Host "Installed NDD. Use ndd-setup for readiness or ndd-init for optional project documents (`$ in Codex, / in Claude Code)."
 Write-Host 'Restart the agent if the skills do not appear.'

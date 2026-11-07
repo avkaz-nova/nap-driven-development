@@ -21,6 +21,10 @@ A fresh session is optional; spec, plan and recorded evidence carry the context.
 ## Before editing
 
 1. Read applicable instructions, the spec, plan and Git status if available.
+   Follow the [project context and overview rules](../ndd-setup/references/project-context.md)
+   for optional project documents, relevant changed constraints and progress.
+   Reconcile a relevant context conflict before implementation; a matching task
+   digest alone does not establish agreement with changed project rules.
    Reuse earlier findings; inspect code/tests relevant to the selected work and
    recheck changed files or uncertain assumptions instead of repeating broad scans.
    Preserve unrelated changes. A manifest or project templates are not required. If legacy NDD files exist, follow the
@@ -30,7 +34,8 @@ A fresh session is optional; spec, plan and recorded evidence carry the context.
    uses the current user's confirmed prefix; a qualified id/full folder name/path
    selects an explicit feature. Report the resolved path and task id; explain
    missing feature files or task ids without creating setup files.
-   If the spec is already done, report it without editing unless the user
+   If the spec is already done, report it (refresh a relevant existing overview
+   entry from recorded evidence if needed) without implementation unless the user
    requests a new revision through `ndd-spec`.
 2. Require spec status `approved` or `in-progress` and no unresolved
    `[NEEDS CLARIFICATION]`. Recompute the spec digest using the
@@ -77,11 +82,16 @@ A fresh session is optional; spec, plan and recorded evidence carry the context.
   Use one short entry per check or group of tasks; update evidence without
   appending repetitive logs. Preserve useful failure details and prior results.
   If blocked, leave it unchecked and record what remains. Set the spec to
-  `in-progress` when implementation starts.
+  `in-progress` when implementation starts. Refresh the relevant existing
+  overview entry at that transition and when a blocker is recorded.
 - When all tasks are complete, verify every AC against the assembled feature,
   run required final project checks, and review the diff for unintended changes.
   Mark the spec `done` only when that evidence is recorded. Missing tools,
   unperformed manual checks or pre-existing failures are not passing results.
+- Refresh relevant task links/statuses in an existing project overview before
+  stopping, including after an explicit single task. Preserve partial progress:
+  one finished task does not complete its spec or the whole capability. Follow
+  the shared aggregation rules; do not rewrite product scope or create an overview.
 
 Report briefly what changed, what was verified and what remains unresolved,
 with a suggested commit message. Do not repeat the spec/plan or narrate routine steps.

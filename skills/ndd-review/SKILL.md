@@ -13,6 +13,10 @@ If an unresolved conflict blocks the requested work, explain the specific
 contradiction and pause the affected work; do not silently bypass or rewrite rules.
 
 Review in the user's language, respecting applicable project instructions.
+Read relevant optional context using the
+[project context and overview rules](../ndd-setup/references/project-context.md).
+Report material conflicts or stale overview entries without updating them. This
+command reviews task specs/plans/code, not the project folder as an executable task.
 Review is optional and is allowed for draft, in-progress and done features.
 It never grants approval or replaces verification in `ndd-do`.
 
