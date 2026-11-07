@@ -38,9 +38,12 @@ A fresh session is optional; spec, plan and recorded evidence carry the context.
    entry from recorded evidence if needed) without implementation unless the user
    requests a new revision through `ndd-spec`.
 2. Require spec status `approved` or `in-progress` and no unresolved
-   `[NEEDS CLARIFICATION]`. Recompute the spec digest using the
-   sibling `ndd-plan/scripts/spec-digest.sh` or `.ps1` as documented in that
-   skill. Require equality with the plan's `spec_digest`. Missing metadata,
+   `[NEEDS CLARIFICATION]`. Recompute the spec digest with the installed read-only helper:
+   `bash <installed-skills>/ndd-plan/scripts/spec-digest.sh <spec-path>`;
+   on Windows use `powershell -NoProfile -File <installed-skills>/ndd-plan/scripts/spec-digest.ps1 -Path <spec-path>`
+   (`pwsh` when appropriate). Quote paths. These helpers hash the spec body,
+   excluding frontmatter. This check does not require loading `ndd-plan/SKILL.md`;
+   load that skill only when planning is requested. Require equality with the plan's `spec_digest`. Missing metadata,
    a failed helper or a mismatch blocks implementation; return to spec/plan
    review. Do not silently update the digest or grant approval yourself.
 3. Require plan status `approved`. A clear approval of the displayed current
