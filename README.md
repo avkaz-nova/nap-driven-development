@@ -387,24 +387,72 @@ Restart the agent after updating. Existing project specs and plans stay unchange
 
 ## Uninstall
 
-Run the latest installer from your downloaded NDD folder. The commands below
-work from any directory when you used the recommended download location;
-otherwise substitute the full path to your copy.
+Open your downloaded NDD folder, then choose **one** removal command below.
+If you downloaded NDD elsewhere, use its actual path in the first command.
 
-**Mac — remove NDD for both agents:**
+<details>
+<summary><strong>Uninstall for Mac</strong></summary>
+
+**1. Open the NDD folder:**
 
 ```bash
-bash "$HOME/nap-driven-development/install.sh" --all --uninstall
+cd "$HOME/nap-driven-development"
 ```
 
-**Windows — remove NDD for both agents:**
+**2. After the folder opens successfully, choose one option:**
+
+Remove NDD for Claude Code only:
+
+```bash
+bash ./install.sh --claude --uninstall
+```
+
+Remove NDD for Codex only:
+
+```bash
+bash ./install.sh --codex --uninstall
+```
+
+Remove NDD completely:
+
+```bash
+bash ./install.sh --all --uninstall
+```
+
+</details>
+
+<details>
+<summary><strong>Uninstall for Windows</strong></summary>
+
+**1. Open the NDD folder:**
 
 ```powershell
-powershell -NoProfile -File "$env:USERPROFILE\nap-driven-development\install.ps1" -All -Uninstall
+Set-Location -LiteralPath "$env:USERPROFILE\nap-driven-development"
 ```
 
-For one agent, replace `--all` with `--codex` or `--claude` (Windows: `-Codex` or
-`-Claude`). Add `--dry-run` / `-DryRun` to preview.
+**2. After the folder opens successfully, choose one option:**
+
+Remove NDD for Claude Code only:
+
+```powershell
+powershell -NoProfile -File .\install.ps1 -Claude -Uninstall
+```
+
+Remove NDD for Codex only:
+
+```powershell
+powershell -NoProfile -File .\install.ps1 -Codex -Uninstall
+```
+
+Remove NDD completely:
+
+```powershell
+powershell -NoProfile -File .\install.ps1 -All -Uninstall
+```
+
+</details>
+
+Add `--dry-run` / `-DryRun` to a removal command to preview.
 
 Removal deletes the selected NDD skills, including local edits, and their install
 metadata. Your project code, specs and unrelated skills remain. Full removal also
