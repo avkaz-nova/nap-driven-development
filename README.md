@@ -78,6 +78,8 @@ bash ./install.sh --all
 
 </details>
 
+---
+
 <details>
 <summary><strong>Install for Windows</strong></summary>
 
