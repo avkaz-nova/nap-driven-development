@@ -50,69 +50,33 @@ Open **Terminal**.
 git clone https://github.com/avkaz/nap-driven-development.git "$HOME/nap-driven-development"
 ```
 
-**2. Open NDD from any folder:**
+**2. Open the NDD folder:**
 
 ```bash
 cd "$HOME/nap-driven-development"
 ```
 
-**3. Installation options:**
+**3. After the folder opens successfully, choose one option:**
 
-
-<details>
-<summary>Install for both agents</summary>
-
-Optional preview:
+Install NDD for Claude Code only:
 
 ```bash
-bash ./install.sh --all --dry-run
+bash ./install.sh --claude
 ```
 
-Install:
+Install NDD for Codex only:
+
+```bash
+bash ./install.sh --codex
+```
+
+Install NDD for both agents:
 
 ```bash
 bash ./install.sh --all
 ```
 
 </details>
-
-<details>
-<summary>Install only for Codex</summary>
-
-Optional preview:
-
-```bash
-bash ./install.sh --codex --dry-run
-```
-
-Install:
-
-```bash
-bash ./install.sh --codex
-```
-
-</details>
-
-<details>
-<summary>Install only for Claude Code</summary>
-
-Optional preview:
-
-```bash
-bash ./install.sh --claude --dry-run
-```
-
-Install:
-
-```bash
-bash ./install.sh --claude
-```
-
-</details>
-
-</details>
-
----
 
 <details>
 <summary><strong>Install for Windows</strong></summary>
@@ -125,72 +89,37 @@ Open **PowerShell**.
 git clone https://github.com/avkaz/nap-driven-development.git "$env:USERPROFILE\nap-driven-development"
 ```
 
-**2. Open NDD from any folder:**
+**2. Open the NDD folder:**
 
 ```powershell
 Set-Location -LiteralPath "$env:USERPROFILE\nap-driven-development"
 ```
 
-**3. Installation options:**
+**3. After the folder opens successfully, choose one option:**
 
-
-<details>
-<summary>Install for both agents</summary>
-
-Optional preview:
-
-```powershell
-powershell -NoProfile -File .\install.ps1 -All -DryRun
-```
-
-Install:
-
-```powershell
-powershell -NoProfile -File .\install.ps1 -All
-```
-
-</details>
-
-<details>
-<summary>Install only for Codex</summary>
-
-Optional preview:
-
-```powershell
-powershell -NoProfile -File .\install.ps1 -Codex -DryRun
-```
-
-Install:
-
-```powershell
-powershell -NoProfile -File .\install.ps1 -Codex
-```
-
-</details>
-
-<details>
-<summary>Install only for Claude Code</summary>
-
-Optional preview:
-
-```powershell
-powershell -NoProfile -File .\install.ps1 -Claude -DryRun
-```
-
-Install:
+Install NDD for Claude Code only:
 
 ```powershell
 powershell -NoProfile -File .\install.ps1 -Claude
 ```
 
-</details>
+Install NDD for Codex only:
+
+```powershell
+powershell -NoProfile -File .\install.ps1 -Codex
+```
+
+Install NDD for both agents:
+
+```powershell
+powershell -NoProfile -File .\install.ps1 -All
+```
 
 If Windows blocks the script, see [Windows installation help](docs/installation.md#windows-execution-policy).
 
 </details>
 
----
-
+Add `--dry-run` / `-DryRun` to an install command to preview.
 Restart your agent after installation.
 
 [Custom installation folders and troubleshooting →](docs/installation.md)
@@ -280,30 +209,40 @@ does not commit, push or deploy automatically.
 
 ## Update
 
-Open your NDD folder, pull the current source, then reinstall for your chosen
-agents. Use your actual path if you downloaded NDD somewhere else. If you used a
-ZIP, download and extract a fresh copy and skip `git pull`.
-
+Open your NDD folder, pull the current source, then choose **one** update command.
+Use your actual path if you downloaded NDD somewhere else. If you used a ZIP,
+download and extract a fresh copy and skip `git pull`.
 
 <details>
 <summary><strong>Update for Mac</strong></summary>
 
-Open NDD from any folder:
+**1. Open the NDD folder:**
 
 ```bash
 cd "$HOME/nap-driven-development"
 ```
 
-After the folder opens successfully, download the changes:
+**2. After the folder opens successfully, download the changes:**
 
 ```bash
 git pull --ff-only
 ```
 
-After a successful pull, choose one install command below.
+**3. After a successful pull, choose one option:**
 
-<details>
-<summary>Update NDD for both agents</summary>
+Update NDD for Claude Code only:
+
+```bash
+bash ./install.sh --claude
+```
+
+Update NDD for Codex only:
+
+```bash
+bash ./install.sh --codex
+```
+
+Update NDD for both agents:
 
 ```bash
 bash ./install.sh --all
@@ -312,46 +251,35 @@ bash ./install.sh --all
 </details>
 
 <details>
-<summary>Update NDD for Codex only</summary>
-
-```bash
-bash ./install.sh --codex
-```
-
-</details>
-
-<details>
-<summary>Update NDD for Claude Code only</summary>
-
-```bash
-bash ./install.sh --claude
-```
-
-</details>
-
-</details>
-
----
-
-<details>
 <summary><strong>Update for Windows</strong></summary>
 
-Open NDD from any folder:
+**1. Open the NDD folder:**
 
 ```powershell
 Set-Location -LiteralPath "$env:USERPROFILE\nap-driven-development"
 ```
 
-After the folder opens successfully, download the changes:
+**2. After the folder opens successfully, download the changes:**
 
 ```powershell
 git pull --ff-only
 ```
 
-After a successful pull, choose one install command below.
+**3. After a successful pull, choose one option:**
 
-<details>
-<summary>Update NDD for both agents</summary>
+Update NDD for Claude Code only:
+
+```powershell
+powershell -NoProfile -File .\install.ps1 -Claude
+```
+
+Update NDD for Codex only:
+
+```powershell
+powershell -NoProfile -File .\install.ps1 -Codex
+```
+
+Update NDD for both agents:
 
 ```powershell
 powershell -NoProfile -File .\install.ps1 -All
@@ -359,30 +287,8 @@ powershell -NoProfile -File .\install.ps1 -All
 
 </details>
 
-<details>
-<summary>Update NDD for Codex only</summary>
-
-```powershell
-powershell -NoProfile -File .\install.ps1 -Codex
-```
-
-</details>
-
-<details>
-<summary>Update NDD for Claude Code only</summary>
-
-```powershell
-powershell -NoProfile -File .\install.ps1 -Claude
-```
-
-</details>
-
-</details>
-
----
-
+Add `--dry-run` / `-DryRun` to an update command to preview.
 If you installed to custom folders, use the same destination options again.
-
 Restart the agent after updating. Existing project specs and plans stay unchanged.
 
 ## Uninstall
