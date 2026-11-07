@@ -1,11 +1,12 @@
-# Start with a project idea
+# Optional project context
 
-Start with `ndd-setup` to check readiness and choose your task prefix. For a new
-project, optionally use `$ndd-init` in Codex or `/ndd-init` in Claude Code to
-discuss its purpose, main capabilities and/or rules. For an existing project,
-skip init and use `ndd-spec` → `ndd-plan` → `ndd-do` for the next change.
+Start with `ndd-setup` to check readiness and choose your task prefix. Optionally
+use `$ndd-init` in Codex or `/ndd-init` in Claude Code in any new or existing
+project to give NDD shared context about its goals, capabilities and rules.
+You can skip it entirely and use `ndd-spec` → `ndd-plan` → `ndd-do`; missing project
+documents never block that workflow.
 
-Workflow: setup → init (optional, new project only) → spec → approve → plan → approve → do + verify.
+Workflow: setup → init (optional, any project) → spec → approve → plan → approve → do + verify.
 
 Init itself does not require Git or a saved prefix. Repeat it when you explicitly
 want to revise the project documents you previously created.
@@ -15,6 +16,7 @@ Examples (use `/` in Claude Code):
 ```text
 $ndd-init
 $ndd-init I want to build a workout tracker
+$ndd-init Study this existing project and summarize its goals
 $ndd-init Only project rules: English interface and Russian documentation
 $ndd-init Add a capability overview using our existing project description
 ```
@@ -23,23 +25,34 @@ These are ordinary requests, not flags or required modes.
 
 ## Conversation and document choice
 
-The agent first reads existing project context and asks what you want to build,
-for whom and what main problem it solves. It asks only material follow-ups,
-up to three at a time, without requiring a full roadmap or stack selection.
-For a rules-only request, it discusses rules without demanding a product spec.
+For a new idea, the agent discusses what you want to build, for whom and what
+problem it solves. For an existing project, it first reads relevant documentation,
+code, configuration and tests, then summarizes what the project does and what
+remains uncertain. Inferred goals are checked with you rather than treated as
+confirmed requirements. It asks only material follow-ups, up to three at a time.
+For a rules-only request, it focuses on existing rules and any requested additions.
 
 After the discussion it recommends the smallest useful selection:
 
 | Optional file | Content |
 |---|---|
-| `specs/project/spec.md` | Purpose, users, main scenarios, first working scope and known constraints. |
-| `specs/project/features.md` | Detailed main capabilities, intended stages, current status and links to concrete tasks. |
-| `specs/project/rules.md` | Agreed conventions such as interface/documentation language or technical boundaries. |
+| `ndd-specs/project/spec.md` | Purpose, users, main scenarios, current or first working scope and known constraints. |
+| `ndd-specs/project/features.md` | Detailed main capabilities, intended stages, current status and links to concrete tasks. |
+| `ndd-specs/project/rules.md` | Links to existing rule documents and any agreed additional conventions. |
+
+When rules already live in `AGENTS.md`, `CLAUDE.md` or another project document,
+a selected `rules.md` links to those files with a short scope note. It does not
+copy their contents, broaden scoped rules or modify the original files. The links
+are included in the same draft approval as other project content. No separate
+setup document is created.
 
 Choose any combination, or none. If you already selected the files in your
 request, the agent does not ask you to choose again. No empty placeholders are
 created. Each capability can link to several feature, bug or maintenance specs;
 an idea does not need a task spec yet, and an unrelated bug needs no capability.
+Existing capabilities without NDD task specs are described from observed evidence,
+with verification limitations stated; they are not relabeled as ideas or assumed
+fully verified merely because code exists.
 
 The agent shows the selected drafts together. One approval saves the displayed
 set. Selecting filenames alone does not approve their content. On repeat init,
@@ -50,12 +63,14 @@ a task update. No code, Git initialization, prefix setting or task plan is creat
 ## Location and ongoing work
 
 The `project/` folder sits beside numbered task folders, not above a `features/`
-directory. An established alternative specs root uses the same sibling layout.
-Existing task paths are preserved. Project documents have no feature number,
+directory. New projects use `ndd-specs/`; an established NDD root in `specs/` or a
+custom location uses the same sibling layout. If both roots contain NDD work,
+choose the intended root before saving. Existing task paths are preserved and
+init does not create a second project overview. Project documents have no feature number,
 task approval metadata or implementation plan.
 
 ```text
-specs/
+ndd-specs/
 ├── project/
 │   ├── spec.md
 │   ├── features.md

@@ -14,8 +14,8 @@ ones and local Git configuration. Do not execute the sample code during review.
 Prepare these files yourself in an isolated project. Setup can confirm `ak` for
 this project. Make separate copies for destructive/error scenarios.
 
-- `specs/ak-009-old/spec.md`, `specs/ak-010-csv/spec.md`,
-  `specs/iv-100-other/spec.md`: use the installed spec template with matching IDs.
+- `ndd-specs/ak-009-old/spec.md`, `ndd-specs/ak-010-csv/spec.md`,
+  `ndd-specs/iv-100-other/spec.md`: use the installed spec template with matching IDs.
 - In ak-010 use: R1 exports every row as CSV; R2 doubles embedded quotes and quotes
   fields containing commas or quotes; R3 empty input produces `name,note` header.
   AC1 checks `Ada / plain`; AC2 checks `Ada / hello, "world"`; AC3 checks no rows.
@@ -56,7 +56,7 @@ consistent; expect a scoped conclusion, not a correctness guarantee.
 
 | Case / AC | Inputs | Expected observation |
 |---|---|---|
-| H1 / AC1–AC3 | In empty non-Git folder, call help; repeat after setup in project; call help with `code 001` extra text; ask in Russian and English | Verbatim compact English `assets/help.md`: setup first, init second and optional for a new project only; all seven commands, invocation variations, simple workflow and brief ID/path notes. No long explanations, translation, added commentary, project scan or writes. |
+| H1 / AC1–AC3 | In empty non-Git folder, call help; repeat after setup in project; call help with `code 001` extra text; ask in Russian and English | Verbatim compact English `assets/help.md`: setup first, init second and optional for new or existing projects; all seven commands, invocation variations, simple workflow and brief ID/path notes. No long explanations, translation, added commentary, project scan or writes. |
 | H3 | Remove `assets/help.md` in the disposable installation | Report the missing resource; do not reconstruct help or search another installation. |
 | S1 / AC4 | Explicit `010`, `ak-010`, full folder name and path to its spec; then missing ID, path outside project and link escaping project | Same feature for valid inputs; report missing/unsafe selections without creating anything or selecting a replacement. |
 | S2 / AC4 | Create duplicate `ak-010-duplicate`; try qualified and short ID | Ask for full name/path, no arbitrary match. Remove duplicate for later cases. |

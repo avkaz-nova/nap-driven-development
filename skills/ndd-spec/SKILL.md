@@ -12,8 +12,9 @@ Respect applicable global, project and nested instructions (`AGENTS.md`,
 If an unresolved conflict blocks the requested work, explain the specific
 contradiction and pause the affected work; do not silently bypass or rewrite rules.
 
-Create or revise `specs/PREFIX-NNN-feature-slug/spec.md`, or an explicitly requested
-project-relative feature path. Until the user chooses to continue to planning,
+Create or revise a task spec in the selected document root, by default
+`ndd-specs/PREFIX-NNN-feature-slug/spec.md`. Retain established legacy/custom roots
+according to the shared location rules. Until the user chooses to continue to planning,
 this phase may edit that specification, create its containing folder, and
 synchronize relevant links/statuses in an existing project capability overview.
 Read applicable project instructions in place; preserve unrelated work. Follow
@@ -27,7 +28,7 @@ If a legacy manifest exists, follow the [existing-project guidance](../ndd-setup
    For a new feature, require a confirmed prefix, choose its next unused number,
    and set the spec's `id` to the full folder name and `owner` to the prefix.
    Only setup may save prefix settings. Keep output inside
-   the project and do not write through links. If `specs/` belongs to another
+   the project and do not write through links. If the selected root belongs to another
    workflow, ask for an explicit feature path. If the input is an
    existing spec, keep its id, owner and created date. Use the standard template at
    `../ndd-setup/assets/spec.md`, relative to this loaded skill's directory.

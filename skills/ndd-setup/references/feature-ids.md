@@ -94,7 +94,9 @@ inspect and resolve stale records explicitly rather than scanning the machine.
 project in the current conversation. If neither exists, ask the user to run
 `ndd-setup`; do not guess a prefix or save settings from the spec phase.
 
-Inspect the applicable specs directory. Exclude the reserved `project/` context
+Choose the root using the [document location rules](project-state.md), defaulting
+to `ndd-specs/` for new NDD work while retaining established `specs/` projects.
+Inspect that root. Exclude the reserved `project/` context
 folder from numbering and candidate selection. Choose one greater than the largest
 visible number for that prefix (minimum three digits). Check the whole
 `PREFIX-NNN` identifier, not just the proposed slug: `ak-001-one` and `ak-001-two`
@@ -113,8 +115,10 @@ never silently renumber tasks, merge their documents or choose one by slug order
 
 Read these rules before resolving an id. `project/` and its documents are not
 feature candidates, including for an explicit path: use `ndd-init` for project
-documents and choose a concrete task for plan/do/review. Use the project's default/legacy specs
-location or an explicit safe project-relative path. Do not search unrelated roots.
+documents and choose a concrete task for plan/do/review. First select the root
+using the [document location rules](project-state.md). Ambiguous roots require
+an explicit root or path, including for latest-task selection in review.
+Do not search unrelated roots.
 
 1. A path to the required document, or an exact full folder name such as
    `ak-001-fix-csv-export`, selects that feature directly. No personal prefix is

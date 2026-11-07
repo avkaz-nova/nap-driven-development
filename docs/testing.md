@@ -122,8 +122,14 @@ These scenarios are a manual checklist, not a claim that agent runs were perform
 | Empty folder, no Git/prefix; init with a product idea | Discuss purpose/users, recommend a minimal document set, show selected drafts, save only after approval; no setup/code/Git side effects. |
 | Each of the seven nonempty combinations of spec/features/rules; also decline all | Exactly the chosen files; no mandatory spec, empty placeholders or repeated filename question after an explicit choice. Decline/silence writes nothing. |
 | Rules only, chosen interface and documentation languages | No required product interview; languages remain distinct; existing agent instructions retain precedence. |
+| Existing project with README, code and scoped rule files | Inspect relevant context, summarize evidenced behaviour, clarify inferred goals and gaps; a selected rules.md links to authoritative files without copying or broadening rules. |
+| Existing capability without NDD task specs | Record observed behaviour and verification limitations; do not label it an idea, invent task links or claim verified completion. |
+| Skip init in a new or existing project | Normal task workflow remains available; no requirement to create project documents. |
 | Repeat init with existing notes, links and an unselected rules file | Selected changes shown together; notes/links and unselected files preserved, no new task plan or automatic implementation. |
 | Alternative specs root, existing task folders, no project documents | Init uses a sibling project folder; task commands preserve existing paths and do not create project documents. |
+| Fresh project or unrelated specs/ directory | New task/init documents use ndd-specs/; unrelated specs/ is untouched. Setup creates neither folder. |
+| Established NDD tasks or project context only in specs/ | Reuse that root, including for new tasks and overview updates; do not create a parallel ndd-specs/ or migrate files. |
+| NDD work in both roots; short ID or latest-task review | Ask for the root/full task path before resolving or writing. Explicit paths select their own root and overview; no cross-root fallback or combined numbering. |
 | New spec unambiguously belongs to an existing capability | Add one relative link and draft progress; preserve stage, description and other links. Unclear mapping asks; unrelated bug need not enter the overview. |
 | Spec approved, plan draft, plan approved, implementation starts | Progress moves from spec approved/planning needed to ready to in progress; approvals are not inferred from the overview. |
 | Explicit single task completes; another remains or a required check fails | Neither spec nor capability is marked done; partial progress or blocker is shown. |

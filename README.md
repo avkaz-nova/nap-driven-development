@@ -8,8 +8,8 @@ NDD helps **Claude Code and Codex** implement changes that match your requiremen
 It keeps the scope, tasks and verification results in your project, so you can
 continue work across sessions or switch agents. Available on **Mac and Windows**.
 
-Start a new project with optional purpose, capability and rules documents, or
-use NDD in an existing project with its current structure, tools and rules.
+Use NDD in new or existing projects. Optional project documents capture goals,
+capabilities and links to existing rules while preserving your structure and tools.
 NDD respects global, project and nested instructions, including `AGENTS.md` and
 `CLAUDE.md`, and surfaces conflicts before proceeding with affected work.
 
@@ -31,6 +31,13 @@ or install with Git below.
 ## Install
 
 Install once on each computer. You need **Git** and **Claude Code or Codex**.
+Install, update and uninstall commands run from the downloaded **NDD folder**.
+Run NDD chat commands inside the project you are working on.
+
+The commands below save NDD in `nap-driven-development` in your home folder,
+so you can return to it from any terminal location. If you already downloaded
+NDD elsewhere, use that folder's full path instead; you do not need another clone.
+[Finding your NDD folder →](docs/installation.md#find-your-ndd-folder)
 
 <details>
 <summary><strong>Install for Mac</strong></summary>
@@ -40,13 +47,13 @@ Open **Terminal**.
 **1. Download NDD:**
 
 ```bash
-git clone https://github.com/avkaz/nap-driven-development.git
+git clone https://github.com/avkaz/nap-driven-development.git "$HOME/nap-driven-development"
 ```
 
-**2. Open the downloaded folder:**
+**2. Open NDD from any folder:**
 
 ```bash
-cd nap-driven-development
+cd "$HOME/nap-driven-development"
 ```
 
 **3. Installation options:**
@@ -115,13 +122,13 @@ Open **PowerShell**.
 **1. Download NDD:**
 
 ```powershell
-git clone https://github.com/avkaz/nap-driven-development.git
+git clone https://github.com/avkaz/nap-driven-development.git "$env:USERPROFILE\nap-driven-development"
 ```
 
-**2. Open the downloaded folder:**
+**2. Open NDD from any folder:**
 
 ```powershell
-cd nap-driven-development
+Set-Location -LiteralPath "$env:USERPROFILE\nap-driven-development"
 ```
 
 **3. Installation options:**
@@ -204,7 +211,7 @@ Run these commands in your agent's chat. Codex uses `$`; Claude Code uses `/`.
 | Action | Codex | Claude Code |
 |---|---|---|
 | Check project and choose prefix | `$ndd-setup` | `/ndd-setup` |
-| Optional, new project only: describe purpose, capabilities or rules | `$ndd-init` | `/ndd-init` |
+| Optional, any project: capture goals, capabilities and rules | `$ndd-init` | `/ndd-init` |
 | Describe a change | `$ndd-spec Fix CSV export` | `/ndd-spec Fix CSV export` |
 | Plan an approved spec | `$ndd-plan 001` | `/ndd-plan 001` |
 | Complete an approved plan | `$ndd-do 001` | `/ndd-do 001` |
@@ -213,12 +220,14 @@ Run these commands in your agent's chat. Codex uses `$`; Claude Code uses `/`.
 | Review a specific stage | `$ndd-review 001 plan` | `/ndd-review 001 plan` |
 | Show command reference | `$ndd-help` | `/ndd-help` |
 
-Workflow: setup → init (optional, new project only) → spec → approve → plan → approve → do + verify.
+Workflow: setup → init (optional, any project) → spec → approve → plan → approve → do + verify.
 
-Start with `ndd-setup`. For a new project, optionally use `ndd-init` to discuss
-the idea and choose a description, capability overview and/or rules. Approve the
-chosen documents together. For an existing project, skip init and use `ndd-spec`
-for a feature, bug or other change.
+Start with `ndd-setup`. Optionally use `ndd-init` in a new or existing project
+to capture its goals and main capabilities. For an existing project, the agent
+studies relevant docs and code, summarizes its understanding and asks about gaps.
+Existing rules can be linked from `ndd-specs/project/rules.md` without duplicating them.
+Choose and approve only the documents you need, or skip init and use `ndd-spec`
+for the next change. Init is never required to use NDD.
 [Project initialization and progress →](docs/init.md)
 
 Approve each task spec and plan in chat before proceeding. After showing a spec, the
@@ -241,8 +250,13 @@ Setup confirms a personal prefix such as `ak` and saves it as local Git config
 `ndd.prefix`. Then `001` means `ak-001`; use `iv-001` to select another prefix.
 Numbers advance separately per prefix. Each clone needs its own setup.
 
+New NDD projects use `ndd-specs/` by default. Existing NDD documents in `specs/`
+or a configured location stay there; no automatic move is performed. An unrelated
+`specs/` folder is left untouched. If both roots contain NDD work, choose the root
+or provide a full task path.
+
 ```text
-specs/
+ndd-specs/
 ├── project/             (optional; choose any files)
 │   ├── spec.md          (purpose and scope)
 │   ├── features.md      (main capabilities, stages and task links)
@@ -266,18 +280,27 @@ does not commit, push or deploy automatically.
 
 ## Update
 
-NDD distributes the current repository state without numbered releases. In your
-cloned NDD folder, download the latest changes:
-
-```sh
-git pull --ff-only
-```
-
-If you used a ZIP, download and extract a fresh copy instead of running `git pull`.
+Open your NDD folder, pull the current source, then reinstall for your chosen
+agents. Use your actual path if you downloaded NDD somewhere else. If you used a
+ZIP, download and extract a fresh copy and skip `git pull`.
 
 
 <details>
 <summary><strong>Update for Mac</strong></summary>
+
+Open NDD from any folder:
+
+```bash
+cd "$HOME/nap-driven-development"
+```
+
+After the folder opens successfully, download the changes:
+
+```bash
+git pull --ff-only
+```
+
+After a successful pull, choose one install command below.
 
 <details>
 <summary>Update NDD for both agents</summary>
@@ -312,6 +335,20 @@ bash ./install.sh --claude
 
 <details>
 <summary><strong>Update for Windows</strong></summary>
+
+Open NDD from any folder:
+
+```powershell
+Set-Location -LiteralPath "$env:USERPROFILE\nap-driven-development"
+```
+
+After the folder opens successfully, download the changes:
+
+```powershell
+git pull --ff-only
+```
+
+After a successful pull, choose one install command below.
 
 <details>
 <summary>Update NDD for both agents</summary>
@@ -350,173 +387,37 @@ Restart the agent after updating. Existing project specs and plans stay unchange
 
 ## Uninstall
 
-Run from the downloaded NDD folder using the latest installer. Choose one option
-below. Optional previews show the planned actions without deleting anything.
+Run the latest installer from your downloaded NDD folder. The commands below
+work from any directory when you used the recommended download location;
+otherwise substitute the full path to your copy.
 
-Paths below use `~` for your home folder and assume the default installation
-locations. If you used custom destinations or `CLAUDE_CONFIG_DIR`, use the same
-settings when uninstalling; see [installation options](docs/installation.md).
-If you set `NDD_STATE_DIR` for setup, use that same value for full uninstall.
-
-**Removal is permanent:** local edits inside owned NDD skills and installation
-backups are deleted too. Your project source, specs, plans, project instructions,
-unrelated skills and other Git settings are preserved. The agent applications
-and their enclosing `.agents` / `.claude` folders are not removed.
-
-<details>
-<summary>Uninstall NDD for Codex only</summary>
-
-Removes:
-
-- The seven owned skill folders — `ndd-setup`, `ndd-spec`, `ndd-plan`, `ndd-do`,
-  `ndd-help`, `ndd-review`, `ndd-init` —
-  from `~/.agents/skills`.
-- `~/.agents/skills.ndd-kit`, including installation receipts, backups and leftover
-  staging files.
-
-Keeps the Claude Code installation, the downloaded NDD source folder,
-`~/.ndd/projects` and the `ndd.prefix` settings in your projects.
-
-**Mac:**
-
-Optional preview:
+**Mac — remove NDD for both agents:**
 
 ```bash
-bash ./install.sh --codex --uninstall --dry-run
+bash "$HOME/nap-driven-development/install.sh" --all --uninstall
 ```
 
-Uninstall:
-
-```bash
-bash ./install.sh --codex --uninstall
-```
-
-**Windows:**
-
-Optional preview:
+**Windows — remove NDD for both agents:**
 
 ```powershell
-powershell -NoProfile -File .\install.ps1 -Codex -Uninstall -DryRun
+powershell -NoProfile -File "$env:USERPROFILE\nap-driven-development\install.ps1" -All -Uninstall
 ```
 
-Uninstall:
+For one agent, replace `--all` with `--codex` or `--claude` (Windows: `-Codex` or
+`-Claude`). Add `--dry-run` / `-DryRun` to preview.
 
-```powershell
-powershell -NoProfile -File .\install.ps1 -Codex -Uninstall
-```
-
-</details>
-
-<details>
-<summary>Uninstall NDD for Claude Code only</summary>
-
-Removes:
-
-- The seven owned skill folders — `ndd-setup`, `ndd-spec`, `ndd-plan`, `ndd-do`,
-  `ndd-help`, `ndd-review`, `ndd-init` —
-  from `~/.claude/skills`.
-- `~/.claude/skills.ndd-kit`, including installation receipts, backups and leftover
-  staging files.
-
-Keeps the Codex installation, the downloaded NDD source folder,
-`~/.ndd/projects` and the `ndd.prefix` settings in your projects.
-
-**Mac:**
-
-Optional preview:
-
-```bash
-bash ./install.sh --claude --uninstall --dry-run
-```
-
-Uninstall:
-
-```bash
-bash ./install.sh --claude --uninstall
-```
-
-**Windows:**
-
-Optional preview:
-
-```powershell
-powershell -NoProfile -File .\install.ps1 -Claude -Uninstall -DryRun
-```
-
-Uninstall:
-
-```powershell
-powershell -NoProfile -File .\install.ps1 -Claude -Uninstall
-```
-
-</details>
-
-<details>
-<summary>Uninstall NDD completely</summary>
-
-Removes:
-
-- The seven owned NDD skill folders from both `~/.agents/skills` and
-  `~/.claude/skills`, including local edits.
-- Both installation metadata folders, `~/.agents/skills.ndd-kit` and
-  `~/.claude/skills.ndd-kit`, including all receipts, backups and leftover staging files.
-- The local Git config entry `ndd.prefix` in each project recorded in
-  `~/.ndd/projects`, only when its value still matches the registered prefix.
-  Other entries and global Git config are preserved.
-- Successfully cleaned project records, then `~/.ndd/projects` if empty and
-  `~/.ndd` if empty.
-- The NDD source clone containing the running installer, only if it is a verified
-  standalone clone of the official repository, is clean and has no unpublished
-  work or linked worktrees.
-
-**Project cleanup continues on errors.** If a project is missing, its prefix has
-changed or its config cannot be updated, the installer warns, keeps that record
-and moves on. These failures do not block removal of NDD skills or source.
-An unreadable or locked registry is also skipped with a warning.
-
-Only registered projects are checked; the installer does not search your disk.
-Unresolved records can remain in `~/.ndd/projects` after uninstall.
-
-**Source cleanup applies only to the clone running this installer.** Other clones
-and downloads are not searched or removed. ZIP folders and modified or unverified
-clones are kept with an explanation. Add `--keep-source` on Mac or `-KeepSource` on
-Windows to preserve the source clone intentionally; project Git cleanup still runs.
-See [source cleanup checks](docs/installation.md#source-clone-cleanup) for details.
-
-**Mac:**
-
-Optional preview:
-
-```bash
-bash ./install.sh --all --uninstall --dry-run
-```
-
-Uninstall:
-
-```bash
-bash ./install.sh --all --uninstall
-```
-
-**Windows:**
-
-Optional preview:
-
-```powershell
-powershell -NoProfile -File .\install.ps1 -All -Uninstall -DryRun
-```
-
-Uninstall:
-
-```powershell
-powershell -NoProfile -File .\install.ps1 -All -Uninstall
-```
-
-</details>
+Removal deletes the selected NDD skills, including local edits, and their install
+metadata. Your project code, specs and unrelated skills remain. Full removal also
+cleans registered NDD prefixes and may delete the verified clean source clone;
+add `--keep-source` / `-KeepSource` to keep it. Reuse any custom destination or
+`NDD_STATE_DIR` settings from installation/setup.
+[Removal details and troubleshooting →](docs/installation.md#uninstall)
 
 ## Learn more
 
 - [Example spec](examples/002-csv-export/spec.md) and [plan](examples/002-csv-export/plan.md)
 - [Project setup](docs/setup.md)
+- [Optional project context](docs/init.md)
 - [Workflow and approvals](docs/workflow.md)
 - [Installation options and troubleshooting](docs/installation.md)
 - [Development checks](docs/testing.md)

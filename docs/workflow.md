@@ -7,7 +7,7 @@ verification results.
 | Step | What happens |
 |---|---|
 | `ndd-setup` | Check readiness and confirm your task prefix |
-| `ndd-init [idea or request]` | Optional, new project only: agree on purpose, main capabilities and/or rules |
+| `ndd-init [idea or request]` | Optional, new or existing project: capture goals, capabilities and rules |
 | `ndd-spec <idea>` | Write or revise the spec and resolve open questions |
 | Approve the spec | Confirm the current requirements in chat |
 | `ndd-plan <id>` | Create a technical plan with tasks and checks |
@@ -16,12 +16,17 @@ verification results.
 | `ndd-help` | Show commands, workflow and ID rules, with no setup required |
 | `ndd-review [feature] [mode]` | Optional review of spec, plan or implementation |
 
-Workflow: setup → init (optional, new project only) → spec → approve → plan → approve → do + verify.
-For an existing project, skip init.
+Workflow: setup → init (optional, any project) → spec → approve → plan → approve → do + verify.
+Init can be skipped in any project; its documents are not a prerequisite for task work.
 
 Use `/` before commands in Claude Code and `$` in Codex. A short id such as `001`
 uses your [setup prefix](setup.md#your-prefix); a qualified id or full path selects
 an explicit feature.
+
+New NDD work uses `ndd-specs/`. Existing NDD documents in `specs/` or an explicitly
+selected root remain supported without migration. Commands use one selected root
+for tasks and project context; with multiple NDD roots, specify the root or full
+task path. Short IDs and latest-task review do not merge results across roots.
 
 The agent records your approval in the documents. Calling the next command alone
 does not approve a draft. An explicit “approve this plan and implement it” can
@@ -38,11 +43,14 @@ plan approval; continuing does not authorize implementation.
 
 ## Optional project context
 
-For a new project, optional `ndd-init` can create any combination of
-`specs/project/spec.md`, `features.md` and
+For a new or existing project, optional `ndd-init` can create any combination of
+`ndd-specs/project/spec.md`, `features.md` and
 `rules.md`, beside task folders. It first discusses the need, recommends documents,
 then shows the chosen drafts for one approval. Rules-only and overview-only
-requests are valid. Repeating init preserves unselected documents and task paths.
+requests are valid. For an existing project, the agent studies relevant documents
+and code, summarizes its understanding and asks about material gaps. Existing
+rules are linked from a selected `rules.md`, preserving their original scope.
+Repeating init preserves unselected documents and task paths.
 [See the init conversation and examples](init.md).
 
 Spec, plan and do use existing project context and synchronize related task

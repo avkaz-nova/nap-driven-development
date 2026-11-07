@@ -43,11 +43,12 @@ project templates. If resources are missing, report the incomplete installation.
    jobs, hooks, migrations or installers. Do not scan auth caches, secrets,
    `.env`, conversation history or unrelated global files. Never dump environment
    variables or entire configuration files.
-5. Check that the default output directory `specs/` does not belong to an unrelated
-   workflow. Setup leaves it absent; init or the first task may create it.
-   For an existing NDD project,
-   read [existing-project guidance](references/project-state.md) if a legacy
-   manifest, instruction block or copied template is found. Preserve those files.
+5. Select the output root with the
+   [document location rules](references/project-state.md): default `ndd-specs/`,
+   retaining an established `specs/` or custom root without moving documents.
+   Resolve ambiguous roots or unrelated content before selecting a location.
+   Setup leaves absent directories uncreated; init or the first task may create them.
+   Preserve existing manifests, instruction blocks and copied templates.
    Check optional project documents using the
    [project context rules](references/project-context.md); do not create or synchronize them.
 

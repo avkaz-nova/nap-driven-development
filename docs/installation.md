@@ -4,6 +4,33 @@ Start with the [installation, update and uninstall commands](../README.md#instal
 This page covers custom locations and problems you may encounter. Project
 registration uses Git 2.31 or newer.
 
+## Find your NDD folder
+
+The README's download commands use `nap-driven-development` in your home folder.
+These commands open it from any terminal location:
+
+**Mac:**
+
+```bash
+cd "$HOME/nap-driven-development"
+```
+
+**Windows:**
+
+```powershell
+Set-Location -LiteralPath "$env:USERPROFILE\nap-driven-development"
+```
+
+If you downloaded NDD elsewhere or extracted a ZIP, substitute its actual path.
+Look for the folder containing `install.sh`, `install.ps1` and `skills/`.
+If the path does not exist, locate that download in Finder/File Explorer before
+continuing. A machine-wide search can find several clones or old ZIP copies;
+there is no unique universal path for existing downloads. These instructions
+do not move your existing copy or create a global command.
+
+Install, update and uninstall use this NDD source folder. Run chat commands such
+as `ndd-setup` and `ndd-init` in your own project instead.
+
 ## Options and locations
 
 | Bash | PowerShell | Meaning |
@@ -70,21 +97,14 @@ information still blocks uninstall.
 ## Uninstall
 
 Use `--uninstall` / `-Uninstall` with your original agent and destination options.
-Removal permanently deletes the seven owned NDD skill folders and the adjacent
-`<skills-directory>.ndd-kit` metadata, including local skill edits, receipts,
-backups and staging files. The agent applications and enclosing `.agents` /
-`.claude` folders remain, as do project code, specs, plans, instructions, unrelated
-skills and other Git settings.
+Removal deletes selected NDD skills (including local edits) and their
+`<skills-directory>.ndd-kit` metadata. It preserves agent applications, project
+files and unrelated skills.
 
 Single-agent removal keeps the other agent's installation, the source folder and
 project prefix registry. Full removal (`--all` / `-All`) also cleans registered
 project prefixes and may delete the running source clone, as described below.
 Use the same `NDD_STATE_DIR` used during setup if it was customized.
-
-Project cleanup continues on errors: missing projects, changed prefixes and
-unwritable configs are reported and their records retained. An unreadable or
-locked registry is skipped with a warning. Only recorded projects are checked;
-no disk search is performed. These errors do not prevent skill/source removal.
 
 Earlier installations included a terminal `ndd-help` command. Updating removes its
 launchers; remove any manually added `ndd-help/scripts` PATH entry yourself.

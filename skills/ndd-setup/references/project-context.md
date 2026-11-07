@@ -1,9 +1,10 @@
 # Optional project context and capability overview
 
 Project documents live in `project/` beside task folders: normally
-`specs/project/{spec,features,rules}.md` alongside `specs/ak-001-change/`.
-Use the established alternative specs directory when one is explicitly selected
-or documented by the project. If a standalone task path does not establish that
+`ndd-specs/project/{spec,features,rules}.md` alongside `ndd-specs/ak-001-change/`.
+First select the root using the [document location rules](project-state.md).
+Keep established `specs/` or custom roots; do not create a second project folder
+under the new default. If a standalone task path does not establish that
 directory, use the project's known specs root; do not invent a second overview.
 If the location is ambiguous or occupied by unrelated content, ask for the
 intended location. Keep files inside the project and do not write through links.
@@ -14,8 +15,10 @@ as unresolved references rather than following them or deleting the entry.
 
 All three files are optional and independent. Do not create them during setup,
 spec, plan, do or review just because they are absent. `ndd-init` creates or
-revises the user's selected documents after approval. `project/` is reserved
-for this context, excluded from feature numbering/latest-task selection, and is
+revises the user's selected documents after approval in new or existing projects.
+Missing init documents are never a readiness or task-approval prerequisite.
+`project/` is reserved for this context, excluded from feature numbering and
+latest-task selection, and is
 not an executable task. Route requests to plan or implement `project/spec.md`
 to choosing a concrete task; do not create `project/plan.md`.
 
@@ -32,7 +35,14 @@ Use a specified documentation language for generated project/task documents
 unless the user explicitly requests another. Interface language is a product
 requirement, not automatically the chat language. Fixed English help is unchanged.
 Reference existing `AGENTS.md`/`CLAUDE.md` conventions rather than duplicating
-them. Surface actual contradictions and resolve affected scope with the user.
+them. A selected `rules.md` can be a short index of relative links to existing
+rule documents with their scope. Resolve these links relative to `rules.md`,
+verify targets stay inside the project, and read only sources relevant to the
+current work. An index link does not turn a scoped rule into a project-wide rule.
+Report missing or unreadable relevant sources; do not invent their contents.
+Already applicable global/ancestor instructions still apply in place and need
+not be copied or exposed as machine-specific paths in shared documents.
+Surface actual contradictions and resolve affected scope with the user.
 Unrelated project context changes need not invalidate every task, but a relevant
 changed requirement/rule needs spec/plan review before affected implementation.
 The task spec digest does not detect changes in these external documents.
@@ -99,7 +109,8 @@ If implementation is blocked or checks fail, retain the underlying lifecycle
 and add the concrete blocker; do not invent a new task frontmatter status.
 
 Capability status is a summary of its described scope, not simply the latest
-task's status: `idea` before task specs, `planned` once work is specified,
+task's status: `idea` for proposed capabilities without implementation evidence,
+`planned` once work is specified,
 `in progress` when partially implemented or actively worked on, and `done` only
 when the entire described scope is covered by completed, verified work. All
 linked tasks being done is insufficient if part of the capability is unspecified
@@ -107,6 +118,12 @@ or unverified. For an open bug affecting a completed capability, retain the
 completion history and show the current limitation/open fix; do not call it
 fully done while a known defect violates its described scope. Use `needs review`
 when the evidence cannot establish the current state, rather than guessing.
+
+For an existing capability with no NDD task specs, record the observed behaviour
+and its source (for example, an inspected entry point or project document), with
+`existing; verification not recorded` when appropriate. Missing NDD specs do not
+make existing functionality an idea. Inspection alone does not prove completion;
+do not invent task links, approvals or passing checks to fill the overview.
 
 Refresh only affected entries, inspecting their other linked tasks when needed
 for the aggregate. Re-read before writing, preserve concurrent edits, and avoid

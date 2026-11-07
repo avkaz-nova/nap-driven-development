@@ -7,10 +7,11 @@ then confirms a personal prefix for feature names.
 `ndd-help` works before setup too, including outside Git, and writes nothing.
 Use `/ndd-help` in Claude Code or `$ndd-help` in Codex.
 
-After setup, a new project can optionally use `ndd-init` for purpose, capabilities
-and/or rules; see [project initialization](init.md). It creates only the documents
-you choose and approve. For an existing project, skip init and use `ndd-spec` for
-the next change. Setup reads existing project context without creating or updating it.
+After setup, any new or existing project can optionally use `ndd-init` to capture
+its goals, capabilities and/or links to existing rules; see
+[project context](init.md). It creates only the documents you choose and approve.
+You can always skip init and use `ndd-spec` for the next change. Setup reads
+existing project context without creating or updating it.
 
 ## What setup changes
 
@@ -49,7 +50,12 @@ that session-only choice. An unreadable existing config is reported as an error.
 
 ## Task documents
 
-The first `ndd-spec` creates `specs/PREFIX-NNN-feature/spec.md`;
+New NDD work defaults to `ndd-specs/`. An established NDD root in `specs/` or a
+project-specific location is reused without moving files. An unrelated `specs/`
+does not block the new default. If both roots contain NDD work, setup asks which
+to use; explicit task paths remain available.
+
+The first `ndd-spec` creates `ndd-specs/PREFIX-NNN-feature/spec.md`;
 `ndd-plan` adds `plan.md` beside it. Optional `ndd-review` can save `review.md` there after
 your choice. These ordinary project files can be committed unless ignored.
 Compact templates come from the installed skills; existing longer documents
