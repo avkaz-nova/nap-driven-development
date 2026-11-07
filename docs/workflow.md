@@ -77,9 +77,54 @@ needed. Risks, rollback and decisions appear only when material. These are lengt
 guidelines, not quotas: complex changes can need more detail. Existing R/AC specs
 and longer plans remain valid without conversion or renumbering.
 
+Keep simple tasks on one line. For longer tasks, use a short title and action
+bullets under the task's checkbox, followed by verification. Number substeps only
+when their order matters. An optional Tools/method bullet names consequential
+choices such as browser automation, database access or bounded fixture capture;
+omit it when the actions or verification already explain the method. Use verified
+tools, flag availability gaps, and avoid empty fields or inventories of routine
+file reading/editing. Results record checks, outcomes, relevant deviations and
+limitations. The [CSV export plan](../examples/002-csv-export/plan.md) shows both
+one-line and expanded tasks.
+
 Spec creation inspects current behaviour; planning explores implementation details.
 Implementation reuses those findings and rechecks changed files and assumptions.
 Each document is shown once for approval, without a duplicate summary.
+
+## Investigation when needed
+
+Add investigation only when an unresolved question could change the requirements
+or approach. Resolve planning uncertainty with a bounded experiment, or propose
+an investigation-only plan if substantial work is needed. When the approach is
+credible but needs confirmation, make investigation the first task:
+
+```markdown
+- [ ] T1 (AC1): **Determine why quoted CSV fields are split incorrectly**
+  - Exercise the existing parser with a sanitized quoted-comma fixture.
+  - Tools/method: existing parser tests; an isolated scratch probe if needed.
+  - Verify: record the command, fixture, expected and actual fields, and the
+    finding supported by the result. Reproduce the specific failure before fixing it.
+- [ ] T2 (AC1): **Correct quoted-field handling**
+  - Depends on T1 supporting the planned approach; revise the plan if it does not.
+  - Verify: the regression fixture and required project checks pass after the fix.
+```
+
+Reasoning identifies hypotheses; executed checks or actual recorded observations
+support testable findings. A script's existence or exit code alone is insufficient.
+Keep concise evidence in the spec/plan, separating expected reproduction failures
+from broken experiments. Missing tools or inconclusive results leave investigation
+and dependent work incomplete. Confirmed findings allow the approved work to
+continue; a material scope/approach change needs renewed approval.
+
+Optional `.ndd-sandbox/` scripts are local scratch work, not a security boundary.
+Spec and plan may use them for bounded investigation without changing application
+code or permanent tests. Reuse existing checks first, preserve existing scratch
+files, keep them out of Git and retain reproducible sanitized evidence. See the
+[shared investigation rules](../skills/ndd-setup/references/investigation.md).
+An investigation-only plan does not complete delivery criteria or mark a feature
+done. Executing it still records evidence and task progress unless the user
+explicitly requests read-only work. These are agent instructions, not a mechanical
+execution gate or a new runner.
 
 ## Optional review
 
@@ -120,7 +165,9 @@ to make it match the bug.
 
 Each acceptance criterion needs a task and a final check. Checks can be tests,
 builds or a recorded manual observation, depending on the change. Failed or missing
-checks leave the task incomplete. The feature is marked `done` only after all
+checks leave the task incomplete. A planned, specific reproduction failure may
+complete an investigation task, but never proves the implementation passes.
+The feature is marked `done` only after all
 acceptance criteria, required project checks and the final diff are verified.
 
 `ndd-do 001` completes all remaining tasks in order and final verification.

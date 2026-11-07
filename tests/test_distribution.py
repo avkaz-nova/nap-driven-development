@@ -61,6 +61,7 @@ class DistributionTests(unittest.TestCase):
                 for name in ('SKILL.md', 'agents/openai.yaml'):
                     self.assertIn(prefix + 'skills/ndd-init/' + name, bundle.namelist())
                 self.assertIn(prefix + 'skills/ndd-setup/references/project-context.md', bundle.namelist())
+                self.assertIn(prefix + 'skills/ndd-setup/references/investigation.md', bundle.namelist())
                 self.assertIn(prefix + 'docs/init.md', bundle.namelist())
                 self.assertNotIn(prefix + 'skills/ndd-setup/VERSION', bundle.namelist())
                 self.assertNotIn(prefix + 'CHANGELOG.md', bundle.namelist())

@@ -17,6 +17,9 @@ Create or revise a task spec in the selected document root, by default
 according to the shared location rules. Until the user chooses to continue to planning,
 this phase may edit that specification, create its containing folder, and
 synchronize relevant links/statuses in an existing project capability overview.
+Only when investigation is needed, load the shared
+[investigation rules](../ndd-setup/references/investigation.md) for the isolated
+scratch-work exception; otherwise skip that reference. It does not authorize implementation.
 Read applicable project instructions in place; preserve unrelated work. Follow
 the [project context and overview rules](../ndd-setup/references/project-context.md)
 for optional context, document language and synchronization. Without a chosen
@@ -40,6 +43,8 @@ If a legacy manifest exists, follow the [existing-project guidance](../ndd-setup
    context already gathered rather than scanning the project again. Ask only
    questions affecting scope, observable behaviour or acceptance, at most three
    at a time. Do not repeat answered questions.
+   When a material uncertainty needs investigation, follow the shared rules:
+   verify testable claims and separate hypotheses from observed findings.
 3. Write a compact spec using the bundled template. For ordinary tasks aim for
    150–300 words or fewer; this is a ceiling guideline, not a minimum or hard cap.
    Expand only for concrete complexity or risk, never to fill sections.

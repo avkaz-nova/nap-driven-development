@@ -79,6 +79,12 @@ checks cannot prove them:
 - A small CSV fix produces an AC-only spec and a short plan with AC references in
   tasks, no duplicate requirements/edge-case lists or coverage table. Length
   guidelines are ceilings, not padding targets; material risks are not omitted.
+- Simple plan tasks stay on one line. A task with several actions uses a short
+  title and ordinary bullets under one task checkbox; ordered substeps appear
+  only when needed. Tools/method is present only for consequential execution
+  choices, without invented commands, empty fields or repeated verification.
+  Execution records relevant deviations without a routine tool inventory;
+  task selection and completion still use the parent T ids and checkboxes.
 - Both approvals remain necessary. Review accepts the compact shape and the
   existing legacy example without inventing structural defects.
 - Default execution continues between tasks; an explicit task stops after it.
@@ -94,6 +100,31 @@ The example consistency test covers both compact task-based AC references and
 legacy coverage tables, including real spec-body checksums. Native agent behavior
 and latency improvements require observations; shorter instructions alone do not
 prove either.
+
+## Investigation and evidence checks
+
+Use disposable projects; these scenarios require behavioral observation, not
+checks for particular wording in a generated plan:
+
+- A routine, understood change gets no investigation task or scratch directory.
+- A material uncertainty is checked during planning or becomes an explicit first
+  task with a question, inputs, expected observation and dependent tasks.
+  An investigation-only plan identifies unmet delivery ACs instead of inventing
+  implementation tasks or claiming complete coverage.
+- Spec/plan probes execute only within their scratch exception; application and
+  permanent test files remain unchanged. Existing scratch files/ignore rules are
+  preserved; no installation, live writes or notifications are inferred from it.
+- A real, expected reproduction failure can complete investigation. An unrelated
+  exception, missing tool/input, zero exit with irrelevant assertions or only an
+  LLM explanation cannot; dependent work remains blocked.
+- Confirmed findings continue into approved dependent tasks automatically.
+  Contradictory findings trigger review of the affected approach/scope. Completing
+  investigation-only tasks leaves delivery incomplete and the spec not done.
+  Explicit execution records evidence and completed investigation checkboxes;
+  an explicit read-only request instead reports unrecorded progress without writes.
+- Evidence records actual commands/procedures, inputs, relevant environment,
+  expected/observed results and limitations. Unchanged reliable evidence is reused;
+  unavailable temporary files or changed inputs are not silently treated as current.
 
 ## Spec-to-plan continuation
 

@@ -49,8 +49,8 @@ A fresh session is optional; spec, plan and recorded evidence carry the context.
 3. Require plan status `approved`. A clear approval of the displayed current
    plan in this conversation can be recorded now, after the digest check;
    a bare `ndd-do 001` is not retrospective approval.
-   If all tasks are checked, perform any outstanding final acceptance checks
-   instead of inventing another task.
+   If all tasks are checked, honor an investigation-only plan's stopping point;
+   otherwise perform outstanding final acceptance checks instead of inventing a task.
 4. Start with the requested task or first unchecked one. Respect prerequisites;
    don't repeat a checked task without an explicit reason. State its AC scope
    (and R ids for legacy documents).
@@ -64,6 +64,10 @@ A fresh session is optional; spec, plan and recorded evidence carry the context.
 
 ## Implement and verify
 
+- For investigation tasks, follow the shared
+  [investigation and evidence rules](../ndd-setup/references/investigation.md).
+  Run the planned checks and record findings before dependent implementation.
+  Unsupported hypotheses and inconclusive checks leave the investigation open.
 - Choose the verification method first. For bugs, reproduce the symptom and
   add a meaningful regression test where feasible. For other work, use suitable
   tests, builds, static checks or a documented manual check; do not manufacture
@@ -80,15 +84,22 @@ A fresh session is optional; spec, plan and recorded evidence carry the context.
   approved, revise the spec and review the affected plan before continuing.
   Small implementation details within approved scope can go in Decisions.
   Changes to approach, scope, dependencies or external effects require review.
-- Check off a task only when its required checks pass. Record a concise result
-  in the plan: task/AC, command or observation, outcome and relevant limitation.
+- Check off a task only when its required checks meet the planned outcome.
+  A specific expected failure can establish a defect reproduction for an
+  investigation task; it cannot establish a successful implementation. Record a
+  concise result in the plan: task/AC, command or observation, outcome and relevant limitation.
+  Include relevant tool/method deviations, not an inventory of routine tools.
   Use one short entry per check or group of tasks; update evidence without
   appending repetitive logs. Preserve useful failure details and prior results.
   If blocked, leave it unchecked and record what remains. Set the spec to
   `in-progress` when implementation starts. Refresh the relevant existing
   overview entry at that transition and when a blocker is recorded.
-- When all tasks are complete, verify every AC against the assembled feature,
-  run required final project checks, and review the diff for unintended changes.
+- An investigation-only plan stops at findings and the next planning step;
+  record its evidence and task progress as usual unless explicitly read-only.
+  Do not start unplanned implementation or mark its spec done.
+- When all implementation-plan tasks are complete, verify every AC against the
+  assembled feature, run required final project checks, and review the diff for
+  unintended changes.
   Mark the spec `done` only when that evidence is recorded. Missing tools,
   unperformed manual checks or pre-existing failures are not passing results.
 - Refresh relevant task links/statuses in an existing project overview before

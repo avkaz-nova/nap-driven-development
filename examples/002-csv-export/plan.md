@@ -13,7 +13,12 @@ implementation or passing checks; adapt checks to the host application's tooling
 
 ## Tasks
 - [ ] T1 (AC1, AC2): Add the serializer and round-trip/empty-input tests — verify: run the serializer tests with Unicode, comma, quote, multiline and empty fixtures.
-- [ ] T2 (AC1, AC3): Connect the export action after T1 — verify: export a filtered view, read back values/order and compare task state before/after save and cancellation; run the host project's required final checks.
+- [ ] T2 (AC1, AC3): **Connect and verify the export action**
+  - After T1, connect export to the visible task list without changing task state.
+  - Tools/method: a CSV reader for independent read-back and read-only snapshots
+    of task state before and after save/cancellation.
+  - Verify: export a filtered view; confirm exact values/order and unchanged task
+    state after save and cancellation. Run the host project's required final checks.
 
 ## Results
 Not run; example only.
